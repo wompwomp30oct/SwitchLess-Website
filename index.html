@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Switchless | Switch less. Live more.</title>
+<meta name="description" content="Switchless keeps your home comfortable on its own, so you stop running around switching things on and off. Your switches still work. Nothing to learn. Works even in a power cut.">
+<meta name="theme-color" content="#0A0A0C">
+<link rel="icon" type="image/svg+xml" href="favicon-d1.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      base: '#0A0A0C', raised: '#111114', elevated: '#18181C',
+      primary: '#F0ECE4', gold: '#F5B75A', green: '#5CC98C',
+      alert: '#E87C5A', danger: '#D95555'
+    }
+  }}
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   SWITCHLESS — design tokens.  Style.md 12, 13, 25, 43, 127
+   ========================================================================== */
+:root{
+  --c-bg:#0A0A0C; --c-raised:#111114; --c-elev:#18181C;
+
+  /* brand palette driving the atmosphere */
+  --brand-red:#DF301C;    --rgb-red:223,48,28;
+  --brand-orange:#FF9100; --rgb-orange:255,145,0;
+  --brand-cream:#FFF1D1;  --rgb-cream:255,241,209;
+  --brand-cyan:#00B7CD;   --rgb-cyan:0,183,205;
+
+  --c-ink:#F0ECE4; --c-gold:#F5B75A; --c-green:#5CC98C;
+  --c-alert:#E87C5A; --c-danger:#D95555;
+  --ink-70:rgba(240,236,228,.78); --ink-55:rgba(240,236,228,.63);
+  --ink-40:rgba(240,236,228,.48); --ink-25:rgba(240,236,228,.3);
+  --edge:rgba(240,236,228,.07); --edge-2:rgba(240,236,228,.13);
+
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px;
+
+  --d-fast:220ms; --d-mid:460ms; --d-slow:900ms;
+  --e-out:cubic-bezier(.16,.84,.34,1);
+  --e-io:cubic-bezier(.5,0,.2,1);
+
+  /* hero day cycle — written by the one master timeline (51) */
+  --sky-top:#0A0A0C; --sky-bot:#16203a; --sky-warm:rgba(58,44,42,.55);
+  --sun-x:8%; --sun-y:86%; --sun-op:.12; --sun-r:150px; --sun-core:#F5B75A;
+  --refl:#22304a;
+  --sh-op:.2; --sh-skew:-16deg; --sh-len:1;
+  --cu:.05; --fan-play:paused; --fan-dur:4.2s;
+  --l-liv:.18; --l-kit:.5; --l-bed:.1; --l-por:1; --l-pth:.5; --l-stair:.3;
+}
+
+*{ -webkit-tap-highlight-color:transparent }
+html{ scroll-behavior:smooth }
+html{ background:var(--c-bg) }
+body{
+  margin:0; background:transparent; color:var(--c-ink);
+  font-family:var(--font-body); font-weight:400;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+::selection{ background:var(--c-gold); color:var(--c-bg) }
+a{ color:inherit; text-decoration:none }
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer }
+svg{ display:block }
+
+/* ==========================================================================
+   BACKGROUND — ONE persistent WebGL canvas behind the entire site.
+   It is fixed and viewport-sized, so it never enters the document flow, never
+   adds scroll extent, and is never re-created: every section from the hero to
+   the footer is looking at the same still-running canvas. Scroll only moves
+   the composition inside it (see the module at the end of <body>).
+   ========================================================================== */
+#gradient-background{ position:fixed; inset:0; z-index:-1; overflow:hidden;
+  pointer-events:none; contain:paint }
+#gradient{ display:block; width:100%; height:100%; pointer-events:none }
+
+/* ==========================================================================
+   TYPOGRAPHY  16–20
+   ========================================================================== */
+.h1{ font-family:var(--font-display); font-weight:400; font-size:clamp(44px,6.2vw,100px);
+     line-height:1.03; letter-spacing:-.018em; margin:0 }
+.h2{ font-family:var(--font-display); font-weight:400; font-size:clamp(32px,4.3vw,70px);
+     line-height:1.08; letter-spacing:-.014em; margin:0 }
+.h3{ font-family:var(--font-display); font-weight:400; font-size:clamp(25px,2.6vw,42px);
+     line-height:1.16; letter-spacing:-.01em; margin:0 }
+.h4{ font-size:clamp(18px,1.4vw,23px); font-weight:500; line-height:1.32;
+     letter-spacing:-.006em; margin:0 }
+.h1 em,.h2 em,.h3 em{ font-style:italic; font-weight:400 }
+/* one line from the laptop breakpoint up: the heading is allowed into the
+   24px of empty gutter on its right rather than being shrunk to fit */
+@media (min-width:1024px){
+  .h1-line{ white-space:nowrap }
+  #hero .h1{ margin-right:-1.5rem }
+}
+.lead{ font-size:clamp(17px,1.4vw,21px); line-height:1.66; color:var(--ink-70); margin:0 }
+.body{ font-size:clamp(15px,1.05vw,16.5px); line-height:1.75; color:var(--ink-55); margin:0 }
+.micro{ font-size:11px; font-weight:500; letter-spacing:.19em; text-transform:uppercase }
+.num{ font-variant-numeric:tabular-nums }
+p+p{ margin-top:1.3em }
+
+.eyebrow{ display:flex; align-items:center; gap:14px; color:var(--ink-40);
+  font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase }
+.eyebrow::before{ content:""; width:34px; height:1px; background:var(--edge-2); flex:none }
+
+/* ==========================================================================
+   LAYOUT  21–24
+   ========================================================================== */
+.wrap{ width:100%; max-width:1440px; margin-inline:auto; padding-inline:24px }
+@media(min-width:768px){ .wrap{ padding-inline:48px } }
+@media(min-width:1280px){ .wrap{ padding-inline:64px } }
+.sec{ padding-block:clamp(92px,11vw,184px); position:relative }
+.sec-tight{ padding-block:clamp(72px,8vw,124px) }
+.read{ max-width:43rem }
+/* no per-section surface and no seam line: the atmosphere is the only
+   ground, so nothing draws a boundary the gradient would have to interrupt */
+
+/* ==========================================================================
+   BUTTONS  37
+   ========================================================================== */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  padding:15px 30px; border-radius:999px; font-size:11.5px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; white-space:nowrap;
+  transition:transform var(--d-fast) var(--e-out), background var(--d-mid) var(--e-out),
+             border-color var(--d-mid) var(--e-out), color var(--d-mid) var(--e-out),
+             box-shadow var(--d-mid) var(--e-out) }
+.btn-sm{ padding:11px 22px; font-size:11px }
+.btn:active{ transform:translateY(1px) }
+.btn-gold{ background:var(--c-gold); color:#201404;
+  box-shadow:0 10px 30px -20px rgba(245,183,90,.6) }
+.btn-gold:hover{ transform:translateY(-2px); background:#f9c576 }
+/* The one metallic control. Brushed dark bronze rather than silver: the
+   band runs dark edge -> #3B291C body -> a single warm sheen -> back down,
+   which reads as machined metal without any gloss. Hover slides the sheen
+   across instead of lighting the button up. */
+.btn-metal{ color:#F0ECE4; border:1px solid rgba(240,236,228,.14);
+  background-image:linear-gradient(100deg,
+    #241A13 0%, #2C2018 13%, #3B291C 31%, #55402E 48%, #453125 59%,
+    #3B291C 75%, #2C2018 89%, #241A13 100%);
+  background-size:180% 100%; background-position:50% 0;
+  text-shadow:0 1px 1px rgba(0,0,0,.5);
+  box-shadow:0 2px 6px rgba(0,0,0,.4), inset 0 1px 0 rgba(240,236,228,.06);
+  transition:transform var(--d-fast) var(--e-out),
+             background-position var(--d-mid) var(--e-out),
+             filter var(--d-mid) var(--e-out),
+             box-shadow var(--d-mid) var(--e-out) }
+.btn-metal:hover{ transform:translateY(-2px); filter:brightness(1.12);
+  background-position:66% 0;
+  box-shadow:0 7px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(240,236,228,.1) }
+.btn-metal:active{ transform:translateY(0) }
+.btn-ghost{ border:1px solid var(--edge-2); color:var(--c-ink) }
+.btn-ghost:hover{ transform:translateY(-2px); border-color:rgba(245,183,90,.38);
+  background:rgba(240,236,228,.025) }
+.btn-block{ width:100%; }
+
+/* ==========================================================================
+   SURFACES  26, 27, 36
+   ========================================================================== */
+.card{ background:rgba(14,14,17,.66); border:1px solid var(--edge);
+  border-radius:var(--r-xl) }
+.hair{ height:1px; background:var(--edge); border:0; margin:0 }
+
+/* ==========================================================================
+   NAV  39
+   ========================================================================== */
+/* A floating control rather than a bar. The <nav> is only the rail that
+   carries the pill and keeps the page gutter, so it passes clicks straight
+   through; the pill inside it is the visible, clickable surface. Sliding is
+   done by transforming the rail, which is a compositor-only change. */
+#nav{ position:fixed; top:14px; left:0; right:0; z-index:60; height:62px;
+  pointer-events:none; will-change:transform }
+#nav > .wrap{ height:100%; pointer-events:none }
+.nav-shell{ height:100%; padding-inline:24px; pointer-events:auto;
+  border-radius:9999px; border:1px solid rgba(240,236,228,.08);
+  background:rgba(16,13,10,.42);
+  backdrop-filter:blur(18px) saturate(1.2);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 18px 40px -28px rgba(0,0,0,.9),
+             inset 0 1px 0 rgba(240,236,228,.05);
+  transition:background var(--d-slow) var(--e-out),
+             border-color var(--d-slow) var(--e-out) }
+#nav.on .nav-shell{ background:rgba(16,13,10,.64);
+  border-color:rgba(240,236,228,.13) }
+@media(max-width:640px){ .nav-shell{ padding-inline:18px } }
+.navlink{ font-size:13.5px; color:var(--ink-55); transition:color var(--d-fast) }
+.navlink:hover{ color:var(--c-ink) }
+.brand{ display:inline-flex; align-items:center; gap:11px }
+.brand-word{ font-size:15px; font-weight:500; letter-spacing:.13em }
+#menu{ position:fixed; inset:0; z-index:55; background:rgba(10,10,12,.86);
+  backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px);
+  opacity:0; pointer-events:none; transition:opacity var(--d-mid) var(--e-out) }
+#menu.on{ opacity:1; pointer-events:auto }
+
+/* ==========================================================================
+   SKY + SUN  60-63 - atmospheric light, never a card (48)
+   Used only by "An ordinary day" now, which renders its own copy of the
+   residence; the hero's own atmosphere left with the hero's copy.
+   ========================================================================== */
+.sky{ position:absolute; inset:-20% -16% -12% -16%; pointer-events:none }
+.sky-grad{ position:absolute; inset:0; opacity:.82;
+  background:
+    radial-gradient(56% 40% at var(--sun-x) var(--sun-y), var(--sky-warm), transparent 68%),
+    linear-gradient(180deg, var(--sky-top) 4%, var(--sky-bot) 88%);
+  -webkit-mask-image:radial-gradient(58% 52% at 54% 44%, #000 34%, transparent 100%);
+  mask-image:radial-gradient(58% 52% at 54% 44%, #000 34%, transparent 100%) }
+
+/* --sun-ext lets the hero's camera pull the sun back when it steps indoors,
+   without touching the copy of this scene that section 04 renders */
+.sun{ opacity:calc(var(--sun-op) * var(--sun-ext, 1));
+  position:absolute; left:var(--sun-x); top:var(--sun-y);
+  width:var(--sun-r); height:var(--sun-r);
+  margin:calc(var(--sun-r) / -2) 0 0 calc(var(--sun-r) / -2);
+  border-radius:50%;
+  background:radial-gradient(circle, #FFF8E8 7%, var(--sun-core) 33%,
+             rgba(245,183,90,.13) 60%, transparent 70%) }
+
+/* ==========================================================================
+   HERO FILM
+   One full-viewport video and nothing else: no wrapper, no max-width, no
+   radius, no border, no overlay. svh rather than vh so a phone's collapsing
+   address bar cannot leave a strip of page showing beneath it.
+   ========================================================================== */
+#hero{ position:relative; width:100%; height:100svh; overflow:hidden }
+.hero-video{ position:absolute; inset:0; width:100%; height:100%;
+  display:block; object-fit:cover; object-position:48% 50%;
+  /* The footage already carries its own grade, so this is only a touch of
+     contrast to seat it against the page -- no tint, no sepia. Colouring it
+     any harder would be re-grading somebody else's shot. */
+  filter:saturate(1.04) contrast(1.03) }
+/* A phone crops a 16:9 frame hard. Holding it a little left of centre keeps
+   the window and the light it throws in shot, rather than leaving only the
+   middle of the room. */
+@media(max-width:767px){ .hero-video{ object-position:42% 50% } }
+
+/* ---- the focus shift out of the hero ----
+   The hero is sharp while it is the subject and pulls out of focus as the
+   next section becomes it. Only this section is touched: the navigation,
+   the background canvas and everything below stay crisp. The filter is
+   attached by a class so a page sitting at the top pays nothing for it. */
+#hero-wrap{ overflow:hidden }          /* a blur must not bleed downward */
+#hero.receding{
+  filter:blur(var(--hero-blur, 0px)) brightness(var(--hero-dim, 1));
+  opacity:var(--hero-op, 1);
+  will-change:filter, opacity }
+
+/* ---- residence: materials driven by the master timeline ---- */
+.residence{ position:relative; width:100%; height:100%; overflow:visible }
+.residence polygon,.residence ellipse,.residence circle,.residence rect{
+  shape-rendering:geometricPrecision }
+.mg{fill:var(--m-mg)}   .mp{fill:var(--m-mp)}   .jt{fill:var(--m-jt)}
+.mwy{fill:var(--m-mwy)} .mwx{fill:var(--m-mwx)} .mwi{fill:var(--m-mwi)} .min{fill:var(--m-min)}
+.mr{fill:var(--m-mr)}   .mt{fill:var(--m-mt)}   .cap{fill:var(--m-cap)} .band{fill:var(--m-band)}
+/* the same slab, read two ways: a sunlit roof from outside, a ceiling in
+   shadow once the camera steps into a room under it */
+.ceil{fill:var(--m-ceil)}
+.mx{fill:var(--m-mx)}   .my{fill:var(--m-my)}   .mx2{fill:var(--m-mx)}  .my2{fill:var(--m-my)}
+.st2{fill:var(--m-st2)} .rev{fill:var(--m-rev)} .frm{fill:var(--m-frm)} .brass{fill:var(--m-brass)}
+.wd{fill:var(--m-wd)}   .wd2{fill:var(--m-wd2)} .wd3{fill:var(--m-wd3)}
+.rug{fill:var(--m-rug)} .veg{fill:var(--m-veg)} .veg2{fill:var(--m-veg2)}
+.trunk{fill:var(--m-trunk)}
+.mtk{fill:var(--m-mtk)} .mtk2{fill:var(--m-mtk2)} .mtk3{fill:var(--m-mtk3)}
+/* the cutaway's interior surfaces */
+.mwj{fill:var(--m-mwj)} .tile{fill:var(--m-tile)} .void{fill:var(--m-void)}
+.trd{fill:var(--m-trd)} .bedt{fill:var(--m-bedt)}
+.lin{fill:var(--m-lin)}  .lin2{fill:var(--m-lin2)}
+.duv{fill:var(--m-duv)}  .duv2{fill:var(--m-duv2)} .duv3{fill:var(--m-duv3)}
+.gey{fill:var(--m-gey)}  .gey2{fill:var(--m-gey2)} .gey3{fill:var(--m-gey3)}
+.acb{fill:var(--m-acb)}  .acb2{fill:var(--m-acb2)}
+.figb{fill:var(--m-figb)} .figh{fill:var(--m-figh)} .figo{fill:var(--m-figo)}
+.figs{fill:#000; opacity:.18}
+.shade{fill:var(--m-shade)} .fanb ellipse{fill:var(--m-fanb)} .fanh{fill:var(--m-fanh)}
+.gl{fill:var(--refl); opacity:.4}
+.wtr{fill:var(--refl)} .wtr2{fill:#FFF; opacity:.05}
+.shp{fill:#000; opacity:var(--sh-op)}
+.l-shadow{ transform:skewX(var(--sh-skew)) scaleY(var(--sh-len)) }
+/* light as the interface  98 */
+.lg{ fill:var(--c-gold) }
+.lg.l-liv{opacity:calc(var(--l-liv) * .92)}  .lg.l-kit{opacity:calc(var(--l-kit) * .92)}
+.lg.l-bed{opacity:calc(var(--l-bed) * .92)}  .lg.l-stair{opacity:calc(var(--l-stair) * .92)}
+.lg.l-bath{opacity:calc(var(--l-bath) * .92)}
+.lp{ fill:var(--c-gold) }
+.lp.l-liv{opacity:calc(var(--l-liv) * .28)}  .lp.l-bed{opacity:calc(var(--l-bed) * .26)}
+.lp.l-bath{opacity:calc(var(--l-bath) * .22)}
+.lamp{ fill:#FFF6E4 }
+.lamp.l-liv{opacity:var(--l-liv)} .lamp.l-por{opacity:var(--l-por)} .lamp.l-pth{opacity:var(--l-pth)}
+.lamp.l-bed{opacity:var(--l-bed)} .lamp.l-bath{opacity:var(--l-bath)}
+.lamp.l-stair{opacity:var(--l-stair)} .lamp.l-gey{opacity:var(--l-gey)}
+.bulb.l-liv{opacity:calc(var(--l-liv) * .6)} .bulb.l-por{opacity:calc(var(--l-por) * .6)}
+.bulb.l-pth{opacity:calc(var(--l-pth) * .5)} .bulb.l-bed{opacity:calc(var(--l-bed) * .55)}
+.bulb.l-bath{opacity:calc(var(--l-bath) * .5)} .bulb.l-stair{opacity:calc(var(--l-stair) * .5)}
+/* the geyser's own heat, which is not a room light: it reads as warmth on
+   the cylinder rather than as illumination falling on anything */
+.bulb.l-gey{opacity:calc(var(--l-gey) * .5)}
+/* daylight the open curtains let fall across the bedroom floor */
+.sunp{ fill:#FFF6E4; opacity:calc(var(--sunp) * .17) }
+.cu{ fill:var(--m-cu) }
+.cuA{ transform:translate(calc(var(--cu) * 20.2px), calc(var(--cu) * 9.9px)) }
+.cuB{ transform:translate(calc(var(--cu) * -20.2px), calc(var(--cu) * -9.9px)) }
+.fanb{ animation:spin var(--fan-dur) linear infinite;
+  animation-play-state:var(--fan-play); transform-origin:0 0 }
+/* the bedroom fan runs on the bedroom's own state, so it can stop when he
+   walks out of that room while the living room carries on */
+.fan-bed .fanb{ animation-duration:var(--fan-bed-dur);
+  animation-play-state:var(--fan-bed-play) }
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+/* How much of the world outside the room the current shot admits. Interior
+   shots fade the terrace and the balcony rail, which would otherwise float
+   over a ceiling; exterior shots bring them back. */
+#l-terrace{ opacity:var(--ext, 1) }
+#l-balcony{ opacity:calc(0.35 + 0.65 * var(--ext, 1)) }
+
+/* ---- what the house is doing, shown rather than labelled ----
+   Every cue below is gated by one timeline variable, so a device can only
+   look busy when the timeline says it is working. Nothing here is a badge
+   or a readout: it is warmth, air and light. */
+.steamwrap{ opacity:var(--steam) }
+.steam{ fill:#F0ECE4; transform-box:fill-box; transform-origin:center;
+  animation:steamUp 4.6s ease-in-out infinite }
+.steam.s2{ animation-delay:-1.5s } .steam.s3{ animation-delay:-3s }
+@keyframes steamUp{
+  0%{   opacity:0;   transform:translateY(4px) scale(.55) }
+  30%{  opacity:.18 }
+  100%{ opacity:0;   transform:translateY(-30px) scale(1.35) }
+}
+.acflow{ opacity:var(--ac) }
+.chev{ fill:none; stroke:#F0ECE4; stroke-width:1.5; stroke-linecap:round;
+  transform-box:fill-box; transform-origin:center;
+  animation:acDrift 3.6s linear infinite }
+.chev.c2{ animation-delay:-1.2s } .chev.c3{ animation-delay:-2.4s }
+@keyframes acDrift{
+  0%{   opacity:0;   transform:translate(0,0) }
+  28%{  opacity:.30 }
+  100%{ opacity:0;   transform:translate(30px,17px) }
+}
+
+/* the resident. Two silhouettes, one per floor, because a single element
+   cannot sit correctly behind the upstairs furniture and in front of the
+   downstairs sofa at the same time. Only one is ever visible. */
+.sleeper{ opacity:var(--bed-o) }
+.fig-u{ transform:translate(var(--fu-x), var(--fu-y)); opacity:var(--fu-o) }
+.fig-g{ transform:translate(var(--fg-x), var(--fg-y)); opacity:var(--fg-o) }
+
+html.reduced .steam, html.reduced .chev{ animation:none; opacity:.16 }
+
+/* phase read-out — the dot is the porch light itself  35, 98 */
+.phase{ display:inline-flex; align-items:center; gap:10px; color:var(--ink-40) }
+/* what the house just did — one short phrase, never a dashboard */
+.phase.act{ opacity:.66 }
+.phase.act span{ transition:opacity var(--d-mid) var(--e-out) }
+.phase i{ width:5px; height:5px; border-radius:50%; background:var(--c-gold);
+  opacity:calc(.18 + var(--l-por) * .82); box-shadow:0 0 10px rgba(245,183,90,.4) }
+
+/* ==========================================================================
+   MOTION — physical, never a blanket fade-up  40–46
+   ========================================================================== */
+/* The line reveal clips its own line box so the words can slide up out of
+   nothing. The display face descends further below the baseline than these
+   headings' line-heights (1.03 on .h1, 1.08 on .h2) leave room for, so the
+   clip was landing straight through the tails of f, g, p, y and j.
+   The clip box is opened downward by --rise-tail and the same amount is
+   taken straight back off the margin, so the box the reader sees is deeper
+   while the box the layout sees is identical -- nothing moves. The starting
+   offset carries the same term, otherwise the glyph tops would sit inside
+   the newly-taller clip and peek before the reveal ran. */
+.rise{ --rise-tail:.24em;
+  display:block; overflow:hidden;
+  padding-bottom:var(--rise-tail); margin-bottom:calc(var(--rise-tail) * -1) }
+.rise > *{ display:block; will-change:transform;
+  transform:translateY(calc(103% + var(--rise-tail))) }
+.settle{ opacity:0; will-change:opacity }
+.rule{ transform:scaleX(0); transform-origin:left center; will-change:transform }
+.approach{ opacity:0; transform:translateY(24px) scale(.984); will-change:transform,opacity }
+
+/* ==========================================================================
+   RHYTHM 67–71  /  FEATURE RAIL 73
+   ========================================================================== */
+#rhythm-col{ position:absolute; left:0; right:0; top:58vh; display:flex; z-index:10 }
+#rhythm-track{ display:flex; width:100% }
+.phasepane{ flex:0 0 100%; padding-inline:24px }
+.phasepane > div{ max-width:min(31rem,100%) }
+@media(min-width:1024px){
+  #rhythm-col{ top:0; bottom:0; right:auto; align-items:center; overflow:hidden;
+    left:max(48px, calc((100vw - 1440px)/2 + 64px)); width:min(42vw,540px) }
+  .phasepane{ padding-left:0; padding-right:60px }
+  .phasepane > div{ max-width:none }
+}
+.no-bar::-webkit-scrollbar{ display:none }
+.no-bar{ -ms-overflow-style:none; scrollbar-width:none }
+.fcard{ flex:none; width:min(82vw,384px); background:rgba(38,28,21,.6);
+  border:1px solid var(--edge); border-radius:var(--r-xl); padding:32px 30px 28px;
+  opacity:.4; transform:scale(.92);
+  transition:opacity var(--d-slow) var(--e-out), transform var(--d-slow) var(--e-out),
+             border-color var(--d-slow) var(--e-out), background var(--d-slow) var(--e-out) }
+.fcard.live{ opacity:1; transform:scale(1); background:rgba(38,28,21,.72);
+  border-color:rgba(240,236,228,.17) }
+.meter{ height:2px; border-radius:2px; background:rgba(240,236,228,.09); overflow:hidden }
+.meter > i{ display:block; height:100%; border-radius:2px; transform:scaleX(0);
+  transform-origin:left; transition:transform 1.5s var(--e-io) }
+.fcard.live .meter > i{ transform:scaleX(1) }
+
+/* ==========================================================================
+   CONTROL UI  80–83
+   ========================================================================== */
+.rowitem{ display:flex; align-items:center; gap:15px; padding:13px 15px;
+  border-radius:var(--r-md); border:1px solid transparent; cursor:pointer;
+  transition:background var(--d-mid) var(--e-out), border-color var(--d-mid) var(--e-out),
+             opacity var(--d-mid) var(--e-out) }
+.rowitem:hover{ background:rgba(240,236,228,.02) }
+.rowitem.sel{ background:rgba(245,183,90,.05); border-color:rgba(245,183,90,.19) }
+.rowitem.off{ opacity:.32; cursor:not-allowed }
+.rowitem span{ font-size:14.5px; color:var(--ink-70); line-height:1.4 }
+.tick{ appearance:none; width:19px; height:19px; flex:none; border-radius:6px;
+  border:1px solid var(--edge-2); position:relative; background:transparent;
+  transition:border-color var(--d-mid) var(--e-out), background var(--d-mid) var(--e-out) }
+.tick:checked{ border-color:rgba(245,183,90,.5); background:rgba(245,183,90,.12) }
+.tick:checked::after{ content:""; position:absolute; inset:0; margin:auto;
+  width:7px; height:7px; border-radius:50%; background:var(--c-gold);
+  box-shadow:0 0 8px rgba(245,183,90,.6) }
+.tick:disabled{ cursor:not-allowed }
+
+/* ==========================================================================
+   REDUCED MOTION  105, 106
+   ========================================================================== */
+html.reduced .rise > *{ transform:none }
+html.reduced .settle{ opacity:1 }
+html.reduced .rule{ transform:none }
+html.reduced .approach{ opacity:1; transform:none }
+html.reduced .fanb{ animation:none }
+html.reduced #rhythm{ height:auto; display:block }
+html.reduced #rhythm-col{ position:static; left:auto; right:auto; bottom:auto; width:100%;
+  display:block; -webkit-mask-image:none; mask-image:none }
+html.reduced #rhythm-track{ width:100%; display:block }
+html.reduced .phasepane{ width:100%; height:auto; padding-block:72px }
+html.reduced .rhythm-scene{ display:none }
+html.reduced #rail{ height:auto; padding-block:60px }
+html.reduced #rail-track{ overflow-x:auto; scroll-snap-type:x mandatory;
+  padding-inline:24px!important }
+html.reduced .fcard{ opacity:1; transform:none; scroll-snap-align:center }
+html.reduced .meter > i{ transform:none }
+</style>
+</head>
+<body>
+
+<!-- The background. One canvas, one WebGL instance, fixed behind
+     everything and outside the document flow. -->
+<div id="gradient-background" aria-hidden="true">
+  <canvas id="gradient"></canvas>
+</div>
+
+<!-- ======================================================== NAV  (39) -->
+<nav id="nav">
+  <div class="wrap">
+   <div class="nav-shell flex items-center justify-between">
+    <a href="#top" class="brand" aria-label="Switchless home">
+      <svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M 23.13,23.13 A 38 38 0 0 1 88 50 A 38 38 0 0 1 50 88 A 19 19 0 0 1 50 50
+                 A 19 19 0 0 0 50 12 A 38 38 0 0 0 12 50 A 38 38 0 0 0 23.13 76.87"
+              fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-word">SWITCHLESS</span>
+    </a>
+
+    <div class="hidden lg:flex items-center gap-9">
+      <a href="#idea" class="navlink">The idea</a>
+      <a href="#day" class="navlink">A day</a>
+      <a href="#india" class="navlink">Indian homes</a>
+      <a href="#pricing" class="navlink">Pricing</a>
+    </div>
+
+    <a href="#pricing" class="btn btn-metal btn-sm hidden lg:inline-flex">Start with one room</a>
+
+    <button id="burger" class="lg:hidden p-2 -mr-2" aria-label="Open menu" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/>
+      </svg>
+    </button>
+   </div>
+  </div>
+</nav>
+
+<!-- The residence drawing. It no longer appears in the hero, but "An
+     ordinary day" clones it for its own scroll-driven scene, so it remains
+     in the document as an inert, non-rendering source. -->
+<div id="residence-src" hidden aria-hidden="true"><!-- The residence. Isometric geometry generated by hero-residence.gen.py; every fill is a CSS variable so the day-cycle timeline can relight the whole house at once. -->
+<svg class="residence" viewBox="-214 -291 433 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<defs>
+<radialGradient id="hglow"><stop offset="0" stop-color="#F5B75A" stop-opacity=".8"/><stop offset="1" stop-color="#F5B75A" stop-opacity="0"/></radialGradient><filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter><radialGradient id="gf" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(-46 150) scale(360 248)"><stop offset=".30" stop-color="#fff"/><stop offset=".72" stop-color="#fff" stop-opacity=".62"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><mask id="gfade" maskUnits="userSpaceOnUse" x="-514" y="-591" width="1033" height="1100"><rect x="-514" y="-591" width="1033" height="1100" fill="url(#gf)"/></mask></defs>
+<g id="l-wall-y">
+<polygon class="mwy" points="-128.5,62.8 61.2,155.6 61.2,42.0 -128.5,-50.7"/>
+<polygon class="rev" points="10.7,130.9 47.4,148.9 47.4,70.0 10.7,52.0"/>
+<polygon class="gl" points="14.7,131.0 47.1,146.9 47.1,70.1 14.7,54.2"/>
+<polygon class="lg l-liv" points="15.0,130.9 47.4,146.8 47.4,69.9 15.0,54.1"/>
+<polygon class="rev" points="-93.3,42.6 -35.2,71.1 -35.2,28.2 -93.3,-0.2"/>
+<polygon class="gl" points="-89.4,40.7 -35.5,67.1 -35.5,28.3 -89.4,2.0"/>
+<polygon class="lg l-kit" points="-89.0,40.6 -35.2,66.9 -35.2,28.2 -89.0,1.8"/>
+<polygon class="frm" points="-62.6,53.2 -61.0,54.0 -61.0,15.2 -62.6,14.5"/>
+</g>
+<g id="l-facade">
+<polygon class="mwx" points="189.7,92.8 61.2,155.6 61.2,42.0 189.7,-20.8"/>
+<polygon class="rev" points="162.2,68.8 110.2,94.2 110.2,51.4 162.2,26.0"/>
+<polygon class="gl" points="158.2,66.9 110.5,90.3 110.5,51.5 158.2,28.2"/>
+<polygon class="lg l-kit" points="157.9,66.8 110.2,90.1 110.2,51.4 157.9,28.0"/>
+<polygon class="frm" points="134.5,77.9 133.0,78.7 133.0,39.9 134.5,39.2"/>
+</g>
+<g id="l-upper">
+<polygon class="mwj" points="-7.3,-110.0 182.4,-17.2 182.4,-122.6 -7.3,-215.4"/>
+<polygon class="mwi" points="7.3,-110.0 -121.2,-47.1 -121.2,-152.5 7.3,-215.4"/>
+<polygon class="rev" points="128.8,-79.1 177.8,-55.2 177.8,-106.2 128.8,-130.1"/>
+<polygon class="gl" points="132.8,-81.0 177.5,-59.1 177.5,-106.1 132.8,-127.9"/>
+<polygon class="lg l-bed" points="133.1,-81.1 177.8,-59.3 177.8,-106.2 133.1,-128.1"/>
+<polygon class="frm" points="155.0,-70.7 156.5,-70.0 156.5,-116.9 155.0,-117.7"/>
+<polygon class="cu cuA" points="125.6,-76.7 150.1,-64.8 150.1,-119.8 125.6,-131.8"/>
+<polygon class="cu cuB" points="151.9,-63.9 176.4,-51.9 176.4,-107.0 151.9,-118.9"/>
+<polygon class="rev" points="-81.4,-104.0 -105.9,-92.0 -105.9,-119.2 -81.4,-131.2"/>
+<polygon class="gl" points="-85.4,-105.9 -105.6,-96.0 -105.6,-119.1 -85.4,-129.0"/>
+<polygon class="lg l-bath" points="-85.7,-106.0 -105.9,-96.2 -105.9,-119.3 -85.7,-129.1"/>
+<polygon class="min" points="0.0,-113.6 189.7,-20.8 61.2,42.0 -128.5,-50.7"/>
+<polygon class="tile" points="0.0,-106.8 63.0,-76.0 -58.1,-16.7 -121.2,-47.5"/>
+<polygon class="rug" points="64.3,-24.2 127.0,6.5 65.8,36.4 3.1,5.7"/>
+<polygon class="sunp" points="124.2,-46.3 180.8,-18.6 110.2,15.9 68.8,-19.2"/>
+<polygon class="lp l-bed" points="119.3,-47.0 179.0,-17.8 102.5,19.6 42.8,-9.6"/>
+<polygon class="lp l-bath" points="0.0,-107.1 63.0,-76.3 -39.8,-26.0 -102.8,-56.9"/>
+<polygon class="void" points="41.9,-56.0 62.7,-45.9 -10.7,-10.0 -31.5,-20.1"/>
+<polygon class="trd" points="-18.7,-25.4 2.1,-15.2 -10.7,-8.9 -31.5,-19.1"/>
+<polygon class="trd" points="-5.8,-21.4 15.0,-11.3 2.1,-5.0 -18.7,-15.2"/>
+<polygon class="trd" points="7.0,-17.5 27.8,-7.4 15.0,-1.1 -5.8,-11.2"/>
+<polygon class="trd" points="19.9,-13.6 40.7,-3.4 27.8,2.8 7.0,-7.3"/>
+<polygon class="frm" points="62.7,-45.5 -10.7,-9.6 -10.7,-37.5 62.7,-73.4"/>
+<circle fill="url(#hglow)" class="bulb l-stair" cx="-16.8" cy="-85.5" r="17"/>
+<circle class="lamp l-stair" cx="-16.8" cy="-85.5" r="2.6"/>
+<polygon class="cap" points="70.4,-184.6 75.3,-182.2 -1.2,-144.8 -6.1,-147.2"/>
+<polygon class="mwi" points="75.3,-76.8 -1.2,-39.4 -1.2,-144.8 75.3,-182.2"/>
+<polygon class="cap" points="-6.1,-41.8 -1.2,-39.4 -1.2,-144.8 -6.1,-147.2"/>
+<polygon class="cap" points="104.0,-168.1 108.9,-165.7 32.4,-128.3 27.5,-130.7"/>
+<polygon class="mwi" points="108.9,-60.3 32.4,-22.9 32.4,-128.3 108.9,-165.7"/>
+<polygon class="cap" points="27.5,-25.3 32.4,-22.9 32.4,-128.3 27.5,-130.7"/>
+<polygon class="gey3" points="-86.0,-134.0 -64.3,-123.4 -91.8,-110.0 -113.5,-120.6"/>
+<polygon class="gey" points="-64.3,-99.6 -91.8,-86.2 -91.8,-110.0 -64.3,-123.4"/>
+<polygon class="gey2" points="-113.5,-96.8 -91.8,-86.2 -91.8,-110.0 -113.5,-120.6"/>
+<ellipse class="gey3" cx="-102.5" cy="-103.3" rx="10" ry="13" transform="rotate(30 -102.5 -103.3)"/>
+<circle fill="url(#hglow)" class="bulb l-gey" cx="-91.8" cy="-98.1" r="26"/>
+<circle class="lamp l-gey" cx="-91.8" cy="-98.1" r="3.0"/>
+<g class="steamwrap"><ellipse class="steam"  cx="-94.9" cy="-115.3" rx="7" ry="4.4"/><ellipse class="steam s2" cx="-85.9" cy="-121.3" rx="5" ry="3.2"/><ellipse class="steam s3" cx="-101.9" cy="-118.3" rx="8" ry="5"/></g>
+<polygon class="frm" points="-50.2,-39.4 -48.3,-38.5 -48.3,-104.8 -50.2,-105.7"/>
+<polygon class="cap" points="-49.6,-110.5 -39.2,-105.4 -49.0,-100.6 -59.4,-105.7"/>
+<polygon class="frm" points="-39.2,-102.0 -49.0,-97.2 -49.0,-100.6 -39.2,-105.4"/>
+<polygon class="frm" points="-59.4,-102.3 -49.0,-97.2 -49.0,-100.6 -59.4,-105.7"/>
+<polygon class="cap" points="-66.7,-103.7 -55.1,-98.0 -73.4,-89.0 -85.1,-94.7"/>
+<polygon class="gl" points="-55.1,-93.2 -73.4,-84.3 -73.4,-89.0 -55.1,-98.0"/>
+<polygon class="mwi" points="-85.1,-90.0 -73.4,-84.3 -73.4,-89.0 -85.1,-94.7"/>
+<circle fill="url(#hglow)" class="bulb l-bath" cx="-75.9" cy="-115.8" r="19"/>
+<circle class="lamp l-bath" cx="-75.9" cy="-115.8" r="2.8"/>
+<polygon class="wd" points="115.1,-81.8 172.6,-53.7 166.5,-50.7 108.9,-78.8"/>
+<polygon class="wd2" points="172.6,-19.0 166.5,-16.0 166.5,-50.7 172.6,-53.7"/>
+<polygon class="wd3" points="108.9,-44.1 166.5,-16.0 166.5,-50.7 108.9,-78.8"/>
+<polygon class="wd" points="164.0,-34.4 171.4,-30.8 154.2,-22.4 146.9,-26.0"/>
+<polygon class="wd2" points="171.4,-12.4 154.2,-4.1 154.2,-22.4 171.4,-30.8"/>
+<polygon class="wd3" points="146.9,-7.6 154.2,-4.1 154.2,-22.4 146.9,-26.0"/>
+<polygon class="frm" points="159.1,-29.0 160.3,-28.4 160.3,-42.7 159.1,-43.3"/>
+<ellipse class="shade" cx="159.1" cy="-46.1" rx="10" ry="6"/>
+<circle fill="url(#hglow)" class="bulb l-bed" cx="159.1" cy="-44.0" r="21"/>
+<circle class="lamp l-bed" cx="159.1" cy="-44.0" r="3.2"/>
+<polygon class="cap" points="48.0,-94.7 59.1,-89.3 11.0,-65.8 0.0,-71.2"/>
+<polygon class="mwi" points="59.1,-23.4 11.0,0.1 11.0,-65.8 59.1,-89.3"/>
+<polygon class="wd3" points="0.0,-5.2 11.0,0.1 11.0,-65.8 0.0,-71.2"/>
+<polygon class="wd" points="110.5,-59.0 163.4,-33.2 94.9,0.4 41.9,-25.5"/>
+<polygon class="wd2" points="163.4,-17.5 94.9,16.0 94.9,0.4 163.4,-33.2"/>
+<polygon class="wd3" points="41.9,-9.9 94.9,16.0 94.9,0.4 41.9,-25.5"/>
+<polygon class="bedt" points="110.8,-66.5 160.7,-42.1 94.6,-9.8 44.7,-34.2"/>
+<polygon class="lin2" points="160.7,-33.3 94.6,-1.0 94.6,-9.8 160.7,-42.1"/>
+<polygon class="lin2" points="44.7,-25.4 94.6,-1.0 94.6,-9.8 44.7,-34.2"/>
+<polygon class="lin" points="110.2,-68.7 154.8,-46.8 138.9,-39.1 94.2,-60.9"/>
+<polygon class="lin2" points="154.8,-41.4 138.9,-33.6 138.9,-39.1 154.8,-46.8"/>
+<polygon class="lin2" points="94.2,-55.5 138.9,-33.6 138.9,-39.1 94.2,-60.9"/>
+<g class="sleeper"><polygon class="duv" points="91.2,-64.1 137.1,-41.6 95.5,-21.3 49.6,-43.7"/><polygon class="duv2" points="137.1,-32.1 95.5,-11.8 95.5,-21.3 137.1,-41.6"/><polygon class="duv3" points="49.6,-34.2 95.5,-11.8 95.5,-21.3 49.6,-43.7"/><circle class="figh" cx="118.7" cy="-54.7" r="6.4"/></g>
+<g class="fan fan-bed" transform="translate(87.8,-71.8)"><g transform="scale(1,0.489)"><g class="fanb"><ellipse rx="24" ry="6" cx="0" cy="0"/><ellipse rx="24" ry="6" cx="0" cy="0" transform="rotate(60)"/><ellipse rx="24" ry="6" cx="0" cy="0" transform="rotate(120)"/></g><circle class="fanh" r="5"/></g></g>
+<g class="fig-u"><ellipse class="figs" cx="0" cy="-1.5" rx="9" ry="3.4"/><ellipse class="figo" cx="0" cy="-20" rx="9.1" ry="18.6"/><circle class="figo" cx="0" cy="-45" r="8.5"/><ellipse class="figb" cx="0" cy="-20" rx="7.6" ry="17"/><circle class="figh" cx="0" cy="-45" r="7"/></g>
+<polygon class="cap" points="61.2,-70.0 67.9,-66.7 61.2,-63.4 54.5,-66.7"/>
+<polygon class="mwx" points="67.9,38.7 61.2,42.0 61.2,-63.4 67.9,-66.7"/>
+<polygon class="mwy" points="54.5,38.7 61.2,42.0 61.2,-63.4 54.5,-66.7"/>
+<polygon class="cap" points="-47.1,-122.9 -40.4,-119.6 -47.1,-116.3 -53.9,-119.6"/>
+<polygon class="mwx" points="-40.4,-14.2 -47.1,-10.9 -47.1,-116.3 -40.4,-119.6"/>
+<polygon class="mwy" points="-53.9,-14.2 -47.1,-10.9 -47.1,-116.3 -53.9,-119.6"/>
+<polygon class="cap" points="133.4,-105.3 140.1,-102.0 133.4,-98.7 126.7,-102.0"/>
+<polygon class="mwx" points="140.1,3.4 133.4,6.7 133.4,-98.7 140.1,-102.0"/>
+<polygon class="mwy" points="126.7,3.4 133.4,6.7 133.4,-98.7 126.7,-102.0"/>
+</g>
+<g id="l-slab">
+<polygon class="ceil" points="0.0,-227.1 189.7,-134.4 61.2,-71.5 -128.5,-164.3"/>
+<polygon class="cap" points="-128.5,-156.1 61.2,-63.4 61.2,-71.5 -128.5,-164.3"/>
+<polygon class="cap" points="189.7,-126.2 61.2,-63.4 61.2,-71.5 189.7,-134.4"/>
+</g>
+<g id="l-terrace">
+<polygon class="mwx" points="0.0,-219.9 -113.8,-164.3 -113.8,-181.3 0.0,-236.9"/>
+<polygon class="mwy" points="0.0,-219.9 175.0,-134.4 175.0,-151.4 0.0,-236.9"/>
+<polygon class="mr" points="0.0,-265.2 58.1,-236.8 6.1,-211.3 -52.0,-239.8"/>
+<polygon class="mwx" points="58.1,-198.7 6.1,-173.3 6.1,-211.3 58.1,-236.8"/>
+<polygon class="mwy" points="-52.0,-201.7 6.1,-173.3 6.1,-211.3 -52.0,-239.8"/>
+<polygon class="rev" points="47.4,-203.7 16.8,-188.7 16.8,-209.8 47.4,-224.7"/>
+<polygon class="gl" points="43.5,-205.6 17.1,-192.7 17.1,-209.7 43.5,-222.6"/>
+<polygon class="lg l-stair" points="43.1,-205.7 16.8,-192.8 16.8,-209.8 43.1,-222.7"/>
+<polygon class="cap" points="90.3,-182.7 113.2,-171.5 91.8,-161.0 68.8,-172.2"/>
+<polygon class="mwx" points="113.2,-161.3 91.8,-150.8 91.8,-161.0 113.2,-171.5"/>
+<polygon class="mwy" points="68.8,-162.0 91.8,-150.8 91.8,-161.0 68.8,-172.2"/>
+<polygon class="mtk" points="90.3,-215.9 110.2,-206.2 91.8,-197.2 71.9,-206.9"/>
+<polygon class="mtk2" points="110.2,-171.5 91.8,-162.5 91.8,-197.2 110.2,-206.2"/>
+<polygon class="mtk3" points="71.9,-172.2 91.8,-162.5 91.8,-197.2 71.9,-206.9"/>
+<polygon class="cap" points="90.0,-212.5 97.9,-208.6 90.0,-204.7 82.0,-208.6"/>
+<polygon class="cap" points="56.6,-124.8 73.1,-116.7 59.7,-110.1 43.1,-118.2"/>
+<polygon class="mwx" points="73.1,-103.1 59.7,-96.5 59.7,-110.1 73.1,-116.7"/>
+<polygon class="mwy" points="43.1,-104.6 59.7,-96.5 59.7,-110.1 43.1,-118.2"/>
+<polygon class="veg" points="56.6,-128.3 71.9,-120.8 59.7,-114.8 44.4,-122.3"/>
+<polygon class="veg2" points="43.8,-117.9 59.1,-110.4 59.1,-114.5 43.8,-122.0"/>
+<polygon class="cap" points="36.7,-115.1 53.2,-107.0 39.8,-100.4 23.3,-108.5"/>
+<polygon class="mwx" points="53.2,-93.4 39.8,-86.8 39.8,-100.4 53.2,-107.0"/>
+<polygon class="mwy" points="23.3,-94.9 39.8,-86.8 39.8,-100.4 23.3,-108.5"/>
+<polygon class="veg" points="36.7,-118.5 52.0,-111.1 39.8,-105.1 24.5,-112.6"/>
+<polygon class="veg2" points="23.9,-108.2 39.2,-100.7 39.2,-104.8 23.9,-112.3"/>
+<polygon class="mwx" points="189.7,-134.4 61.2,-71.5 61.2,-88.5 189.7,-151.4"/>
+<polygon class="mwy" points="-128.5,-164.3 61.2,-71.5 61.2,-88.5 -128.5,-181.3"/>
+<polygon class="cap" points="182.4,-155.0 189.7,-151.4 61.2,-88.5 53.9,-92.1"/>
+<polygon class="cap" points="-121.2,-184.9 68.5,-92.1 61.2,-88.5 -128.5,-181.3"/>
+<polygon class="cap" points="0.0,-244.1 7.3,-240.5 -113.8,-181.3 -121.2,-184.9"/>
+<polygon class="cap" points="7.3,-240.5 182.4,-155.0 175.0,-151.4 0.0,-236.9"/>
+</g>
+<g id="l-balcony">
+<polygon class="mr" points="-101.0,-37.3 61.2,42.0 34.9,54.9 -127.3,-24.4"/>
+<polygon class="mwx" points="61.2,50.2 34.9,63.0 34.9,54.9 61.2,42.0"/>
+<polygon class="mwy" points="-127.3,-16.2 34.9,63.0 34.9,54.9 -127.3,-24.4"/>
+<polygon class="frm" points="-120.9,-23.1 -118.7,-22.0 -118.7,-49.9 -120.9,-50.9"/>
+<polygon class="frm" points="-101.9,-13.8 -99.8,-12.7 -99.8,-40.6 -101.9,-41.7"/>
+<polygon class="frm" points="-82.9,-4.5 -80.8,-3.5 -80.8,-31.3 -82.9,-32.4"/>
+<polygon class="frm" points="-64.0,4.8 -61.8,5.8 -61.8,-22.1 -64.0,-23.1"/>
+<polygon class="frm" points="-45.0,14.0 -42.8,15.1 -42.8,-12.8 -45.0,-13.8"/>
+<polygon class="frm" points="-26.0,23.3 -23.9,24.4 -23.9,-3.5 -26.0,-4.6"/>
+<polygon class="frm" points="-7.0,32.6 -4.9,33.6 -4.9,5.8 -7.0,4.7"/>
+<polygon class="frm" points="11.9,41.9 14.1,42.9 14.1,15.0 11.9,14.0"/>
+<polygon class="frm" points="30.9,51.1 33.0,52.2 33.0,24.3 30.9,23.3"/>
+<polygon class="wd" points="-124.8,-56.2 37.3,23.1 34.9,24.3 -127.3,-55.0"/>
+<polygon class="wd2" points="37.3,25.8 34.9,27.0 34.9,24.3 37.3,23.1"/>
+<polygon class="wd2" points="-127.3,-52.3 34.9,27.0 34.9,24.3 -127.3,-55.0"/>
+</g>
+<g id="l-pavilion">
+<polygon class="min" points="-128.5,61.8 61.2,154.6 6.1,181.5 -183.6,88.7"/>
+<polygon class="lp l-liv" points="-128.5,61.5 61.2,154.2 6.1,181.2 -183.6,88.4"/>
+<polygon class="mwi" points="-121.2,66.4 -176.3,93.4 -176.3,-15.4 -121.2,-42.4"/>
+<polygon class="cap" points="-128.5,-46.0 -121.2,-42.4 -176.3,-15.4 -183.6,-19.0"/>
+<polygon class="cap" points="-150.2,-8.4 -143.5,-5.2 -166.5,6.1 -173.2,2.8"/>
+<polygon class="acb" points="-143.5,7.1 -166.5,18.3 -166.5,6.1 -143.5,-5.2"/>
+<polygon class="acb2" points="-173.2,15.0 -166.5,18.3 -166.5,6.1 -173.2,2.8"/>
+<g class="acflow"><path class="chev" d="M-154.5 20.3 l14 8 l14 -8"/><path class="chev c2" d="M-154.5 32.3 l14 8 l14 -8"/><path class="chev c3" d="M-154.5 44.3 l14 8 l14 -8"/></g>
+<polygon class="rug" points="-85.7,77.6 16.8,127.7 -23.0,147.2 -125.5,97.0"/>
+<polygon class="wd" points="-115.1,37.2 -91.8,48.6 -128.5,66.5 -151.8,55.1"/>
+<polygon class="wd2" points="-91.8,76.1 -128.5,94.0 -128.5,66.5 -91.8,48.6"/>
+<polygon class="wd3" points="-151.8,82.7 -128.5,94.0 -128.5,66.5 -151.8,55.1"/>
+<polygon class="wd2" points="-115.1,24.3 -106.5,28.5 -143.2,46.4 -151.8,42.2"/>
+<polygon class="wd2" points="-106.5,41.4 -143.2,59.3 -143.2,46.4 -106.5,28.5"/>
+<polygon class="wd3" points="-151.8,55.1 -143.2,59.3 -143.2,46.4 -151.8,42.2"/>
+<polygon class="wd" points="-70.4,80.8 -39.8,95.7 -61.2,106.2 -91.8,91.3"/>
+<polygon class="wd2" points="-39.8,109.0 -61.2,119.5 -61.2,106.2 -39.8,95.7"/>
+<polygon class="wd3" points="-91.8,104.5 -61.2,119.5 -61.2,106.2 -91.8,91.3"/>
+<polygon class="wd" points="18.4,100.6 52.0,117.1 39.8,123.1 6.1,106.6"/>
+<polygon class="wd2" points="52.0,141.9 39.8,147.9 39.8,123.1 52.0,117.1"/>
+<polygon class="wd3" points="6.1,131.4 39.8,147.9 39.8,123.1 6.1,106.6"/>
+<polygon class="wd2" points="-97.9,87.0 -91.8,90.0 -97.9,92.9 -104.0,90.0"/>
+<polygon class="wd2" points="-91.8,91.7 -97.9,94.6 -97.9,92.9 -91.8,90.0"/>
+<polygon class="wd3" points="-104.0,91.7 -97.9,94.6 -97.9,92.9 -104.0,90.0"/>
+<polygon class="frm" points="-97.9,89.4 -96.7,90.0 -96.7,43.7 -97.9,43.1"/>
+<ellipse class="shade" cx="-97.9" cy="39.6" rx="13" ry="8"/>
+<circle fill="url(#hglow)" class="bulb l-liv" cx="-97.9" cy="44.6" r="22"/>
+<polygon class="wd" points="-130.1,-45.2 59.7,47.5 53.5,50.5 -136.2,-42.2"/>
+<polygon class="wd2" points="59.7,57.7 53.5,60.7 53.5,50.5 59.7,47.5"/>
+<polygon class="wd3" points="-136.2,-32.0 53.5,60.7 53.5,50.5 -136.2,-42.2"/>
+<polygon class="wd" points="-157.6,-31.8 32.1,61.0 26.0,64.0 -163.7,-28.8"/>
+<polygon class="wd2" points="32.1,71.2 26.0,74.2 26.0,64.0 32.1,61.0"/>
+<polygon class="wd3" points="-163.7,-18.6 26.0,74.2 26.0,64.0 -163.7,-28.8"/>
+<polygon class="frm" points="-65.8,9.3 -64.6,9.9 -64.6,34.3 -65.8,33.7"/>
+<ellipse class="lamp l-liv" cx="-65.8" cy="37.1" rx="9" ry="5"/>
+<circle fill="url(#hglow)" class="bulb l-liv" cx="-65.8" cy="40.1" r="17"/>
+<g class="fan " transform="translate(-9.2,28.4)"><g transform="scale(1,0.489)"><g class="fanb"><ellipse rx="30" ry="6" cx="0" cy="0"/><ellipse rx="30" ry="6" cx="0" cy="0" transform="rotate(60)"/><ellipse rx="30" ry="6" cx="0" cy="0" transform="rotate(120)"/></g><circle class="fanh" r="5"/></g></g>
+</g>
+<g id="l-veranda">
+<polygon class="mp" points="61.2,150.1 116.3,177.1 18.4,224.9 -36.7,198.0"/>
+<polygon class="mx2" points="116.3,183.2 18.4,231.1 18.4,224.9 116.3,177.1"/>
+<polygon class="mx2" points="-36.7,204.1 18.4,231.1 18.4,224.9 -36.7,198.0"/>
+<polygon class="rev" points="26.0,167.3 -13.8,186.8 -13.8,109.3 26.0,89.8"/>
+<polygon class="gl" points="22.0,165.5 -13.5,182.8 -13.5,109.4 22.0,92.0"/>
+<polygon class="lg l-liv" points="21.7,165.3 -13.8,182.7 -13.8,109.2 21.7,91.9"/>
+<polygon class="wd" points="20.8,164.9 -14.7,182.2 -14.7,108.8 20.8,91.4"/>
+<polygon class="brass" points="-8.0,145.7 -10.4,146.9 -10.4,141.4 -8.0,140.2"/>
+<circle fill="url(#hglow)" class="bulb l-por" cx="-26.0" cy="115.0" r="20"/>
+<circle class="lamp l-por" cx="-26.0" cy="115.0" r="3.6"/>
+<polygon class="cap" points="95.2,73.9 105.6,78.9 96.4,83.4 86.0,78.3"/>
+<polygon class="mx2" points="105.6,182.3 96.4,186.8 96.4,83.4 105.6,78.9"/>
+<polygon class="my2" points="86.0,181.7 96.4,186.8 96.4,83.4 86.0,78.3"/>
+<polygon class="cap" points="18.7,111.3 29.1,116.3 19.9,120.8 9.5,115.7"/>
+<polygon class="mx2" points="29.1,219.7 19.9,224.2 19.9,120.8 29.1,116.3"/>
+<polygon class="my2" points="9.5,219.1 19.9,224.2 19.9,120.8 9.5,115.7"/>
+<polygon class="mr" points="61.2,40.0 116.3,66.9 18.4,114.8 -36.7,87.9"/>
+<polygon class="mx2" points="116.3,73.7 18.4,121.6 18.4,114.8 116.3,66.9"/>
+<polygon class="my2" points="-36.7,94.7 18.4,121.6 18.4,114.8 -36.7,87.9"/>
+</g>
+<g class="fig-g"><ellipse class="figs" cx="0" cy="-1.5" rx="9" ry="3.4"/><ellipse class="figo" cx="0" cy="-20" rx="9.1" ry="18.6"/><circle class="figo" cx="0" cy="-45" r="8.5"/><ellipse class="figb" cx="0" cy="-20" rx="7.6" ry="17"/><circle class="figh" cx="0" cy="-45" r="7"/></g>
+<g id="l-court">
+<polygon class="st2" points="-180.5,80.2 -159.1,90.7 -223.4,122.1 -244.8,111.7"/>
+<polygon class="mx2" points="-159.1,107.0 -223.4,138.4 -223.4,122.1 -159.1,90.7"/>
+<polygon class="my2" points="-244.8,128.0 -223.4,138.4 -223.4,122.1 -244.8,111.7"/>
+<polygon class="st2" points="-110.2,146.1 -33.7,183.5 -97.9,214.9 -174.4,177.5"/>
+<polygon class="wtr" points="-110.2,151.1 -42.8,184.0 -97.9,210.9 -165.2,178.0"/>
+<polygon class="wtr2" points="-110.2,151.0 -42.8,183.9 -97.9,210.9 -165.2,178.0"/>
+<polygon class="st2" points="-244.8,117.1 -214.2,132.1 -237.2,143.3 -267.8,128.3"/>
+<polygon class="mx2" points="-214.2,150.4 -237.2,161.6 -237.2,143.3 -214.2,132.1"/>
+<polygon class="my2" points="-267.8,146.7 -237.2,161.6 -237.2,143.3 -267.8,128.3"/>
+<rect class="trunk" x="-242.7" y="67.8" width="5" height="62"/>
+<circle class="veg2" cx="-246.2" cy="70.2" r="46"/>
+<circle class="veg" cx="-240.2" cy="62.2" r="38"/>
+<polygon class="veg" points="-202.0,149.5 -85.7,206.3 -102.5,214.5 -218.8,157.7"/>
+<polygon class="veg2" points="-218.8,178.1 -102.5,234.9 -102.5,214.5 -218.8,157.7"/>
+<polygon class="veg2" points="-85.7,226.7 -102.5,234.9 -102.5,214.5 -85.7,206.3"/>
+<rect class="frm" x="12.3" y="180.3" width="3" height="15"/>
+<circle fill="url(#hglow)" class="bulb l-pth" cx="13.8" cy="180.3" r="13"/>
+<circle class="lamp l-pth" cx="13.8" cy="180.3" r="2.6"/>
+<rect class="frm" x="68.9" y="202.0" width="3" height="15"/>
+<circle fill="url(#hglow)" class="bulb l-pth" cx="70.4" cy="202.0" r="13"/>
+<circle class="lamp l-pth" cx="70.4" cy="202.0" r="2.6"/>
+</g>
+</svg></div>
+
+<div id="menu">
+  <div class="wrap h-full flex flex-col justify-center gap-2">
+    <button id="menu-close" class="absolute top-6 right-6 p-2" aria-label="Close menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>
+      </svg>
+    </button>
+    <a href="#idea"    class="h3 py-3 menu-link">The idea</a>
+    <a href="#day"     class="h3 py-3 menu-link">A day</a>
+    <a href="#india"   class="h3 py-3 menu-link">Indian homes</a>
+    <a href="#control" class="h3 py-3 menu-link">Control</a>
+    <a href="#pricing" class="h3 py-3 menu-link">Pricing</a>
+    <a href="#pricing" class="btn btn-metal mt-8 self-start menu-link">Start with one room</a>
+  </div>
+</div>
+
+<!-- ======================================================== HERO -->
+<!-- The film is the hero. There is no copy column, no container and no card:
+     the section is one full-viewport video, and the site begins by simply
+     showing you the room. -->
+<span id="top"></span>
+<section id="hero-wrap">
+  <div id="hero">
+    <video id="hero-video" class="hero-video"
+           playsinline muted loop autoplay preload="auto"
+           disablepictureinpicture disableremoteplayback
+           tabindex="-1" aria-hidden="true"
+           poster="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAwICQsJCAwLCgsODQwOEh4UEhEREiUbHBYeLCcuLisnKyoxN0Y7MTRCNCorPVM+QkhKTk9OLztWXFVMW0ZNTkv/2wBDAQ0ODhIQEiQUFCRLMisyS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0v/wAARCAAXACgDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQYH/8QALBAAAQMDAwEGBwEAAAAAAAAAAQIDEQAEIQUSMQYTIkFxgZIWJEJRYbHw8f/EABYBAQEBAAAAAAAAAAAAAAAAAAACAf/EABcRAQEBAQAAAAAAAAAAAAAAAAABEQL/2gAMAwEAAhEDEQA/AK69N1HpsNOj5mwcAUQn6AYz+MnyyMyafEVivjeI+6a6XqFptGgpLalJm1SCgK7sBTYgDgc+EcV5papCgrdHJzQb7us2kHvH2mqD+sW2YJ9pqJuwXcNKcZ2q2mCJrOubdTZhaSmeApMVLVhy4duTiUIngcnzpUzTQCZNKpi6vWXdQQbdlDiioGQteEZwB/frMuk6AttTb2okqZdJ2Nsr7yjg5kRET4g5FKVNqpGo71ppKlqK7q7KlAJJ7McD0/2uZXqbQX2Fohu5sgqU9uk788gnznMeNKVlhro1Wmn3Ftcu2zamy2zvSJPOZ59KUpTi7DqZX//Z">
+      <source src="hero.mp4" type="video/mp4">
+    </video>
+  </div>
+</section>
+
+<!-- ================================================= 01 · THE DAILY CHORE -->
+<section id="chore" class="sec">
+  <div class="wrap grid grid-cols-1 lg:grid-cols-12">
+    <div class="lg:col-span-8 lg:col-start-3">
+      <div class="eyebrow settle">01 <span style="opacity:.5">/</span> The daily chore</div>
+
+      <h2 class="h2 mt-8">
+        <span class="rise"><span>You shouldn't have to</span></span>
+        <span class="rise"><span>run your own home.</span></span>
+      </h2>
+
+      <div class="read mt-10">
+        <p class="lead settle">
+          Every day is a sequence of small management tasks. Turning fans on and off.
+          Checking whether the geyser was left running. Switching off lights burning in
+          empty rooms. Coming back to a stuffy house.
+        </p>
+        <p class="lead settle" style="color:var(--ink-55)">
+          Technology was supposed to help. Mostly it handed us one more app to manage,
+          one more remote to find, one more command to remember.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 02 · THE IDEA -->
+<section id="idea" class="sec">
+  <div class="wrap">
+    <div class="grid grid-cols-1 lg:grid-cols-12">
+      <div class="lg:col-span-9">
+        <div class="eyebrow settle">02 <span style="opacity:.5">/</span> The idea</div>
+        <h2 class="h2 mt-8">
+          <span class="rise"><span>A home that</span></span>
+          <span class="rise"><span><em>looks after itself.</em></span></span>
+        </h2>
+        <p class="lead settle mt-10 max-w-[38rem]">
+          Switchless learns the rhythm of your days and keeps each room comfortable on its
+          own — the right temperature, the right light, at the right time.
+        </p>
+      </div>
+    </div>
+
+    <!-- two statements, not cards (125) -->
+    <div class="mt-24 lg:mt-32 grid grid-cols-1 lg:grid-cols-12 gap-y-16 lg:gap-x-10">
+      <div class="lg:col-span-5">
+        <hr class="hair rule">
+        <h3 class="h3 mt-8"><span class="rise"><span>Already comfortable.</span></span></h3>
+        <p class="body settle mt-5 max-w-[27rem]">
+          Your home adjusts itself through the day — reading the hour, the weather and
+          which rooms are being used, and getting a space ready before you walk into it.
+        </p>
+      </div>
+      <div class="lg:col-span-5 lg:col-start-8">
+        <hr class="hair rule">
+        <h3 class="h3 mt-8"><span class="rise"><span>Nothing to learn.</span></span></h3>
+        <p class="body settle mt-5 max-w-[27rem]">
+          No app to master, no hub to configure, nothing to say out loud. Every switch in
+          your home still works exactly as it always has. Switchless only handles what you
+          would rather not think about.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ 03 · AN ORDINARY DAY -->
+<!-- one pinned section, six phases, the same residence throughout (67–71) -->
+<section id="day" class="relative">
+  <div id="rhythm" class="relative h-[100svh] overflow-hidden flex items-center">
+
+    <!-- the residence stays; only the light changes (71) -->
+    <div class="rhythm-scene absolute inset-x-0 top-[15vh] h-[40vh]
+                lg:inset-y-0 lg:top-0 lg:h-full lg:left-[44%] lg:right-0 lg:w-auto
+                pointer-events-none" aria-hidden="true">
+      <div id="rhythm-scene" class="relative w-full h-full">
+        <div class="sky"><div class="sky-grad"></div><div class="sun"></div></div>
+      </div>
+    </div>
+
+    <!-- fixed heading + phase read-out (69) -->
+    <div class="absolute top-0 left-0 right-0 z-20 pt-24 lg:pt-28 pointer-events-none">
+      <div class="wrap flex items-start justify-between gap-6">
+        <div>
+          <div class="eyebrow">03 <span style="opacity:.5">/</span> An ordinary day</div>
+          <h2 class="h3 mt-5 hidden lg:block">An ordinary day, made easy.</h2>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="micro num" style="color:var(--ink-40)"><span id="phase-n">01</span> / 06</div>
+          <div class="mt-2 text-[13px]" id="phase-name" style="color:var(--ink-70)">Dawn</div>
+          <div class="mt-4 hidden sm:flex gap-1.5 justify-end" aria-hidden="true">
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+            <span class="pdot" style="width:26px;height:1px;background:var(--edge-2)"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- vertical scroll drives horizontal travel (68) -->
+    <div id="rhythm-col"><div id="rhythm-track">
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Dawn · 05:40</div>
+          <h3 class="h3 mt-5">You wake to a home that's already getting ready.</h3>
+          <p class="body mt-5">The geyser reached the right warmth twenty minutes ago.
+            Curtains begin to open. The house is awake a little before you are.</p>
+        </div>
+      </div>
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Morning · 07:15</div>
+          <h3 class="h3 mt-5">Morning chai, already comfortable.</h3>
+          <p class="body mt-5">Fans settle to a whisper. Daylight does the work, so the
+            lamps quietly step back and the house opens up.</p>
+        </div>
+      </div>
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Departure · 14:30</div>
+          <h3 class="h3 mt-5">Walk out without a second thought.</h3>
+          <p class="body mt-5">Empty rooms settle themselves. Fans slow, cooling rests,
+            and nothing is left running behind you.</p>
+        </div>
+      </div>
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Arrival · 18:10</div>
+          <h3 class="h3 mt-5">Step into a home that's already comfortable.</h3>
+          <p class="body mt-5">Twenty quiet minutes of preparation before you reach the
+            door. Cool air, warm light, nothing to wait for.</p>
+        </div>
+      </div>
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Dusk · 19:20</div>
+          <h3 class="h3 mt-5"><em>The warmest hour.</em></h3>
+          <p class="body mt-5">Light shifts to amber as the sun goes. Curtains draw.
+            The house begins to slow down with you.</p>
+        </div>
+      </div>
+
+      <div class="phasepane">
+        <div>
+          <div class="micro" style="color:var(--ink-25)">Night · 22:30</div>
+          <h3 class="h3 mt-5">The house winds down with you.</h3>
+          <p class="body mt-5">Cooling drops to a whisper. Only the pathway stays faintly
+            lit, and the house keeps watch while you sleep.</p>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================ 04 · MADE FOR INDIAN HOMES -->
+<section id="india" class="relative">
+  <div id="rail" class="relative h-[100svh] overflow-hidden flex items-start
+              pt-[max(19rem,24vh)] lg:pt-[max(23.5rem,26vh)]">
+
+    <div class="absolute top-0 left-0 right-0 z-20 pt-24 lg:pt-28 pointer-events-none">
+      <div class="wrap">
+        <div class="eyebrow">04 <span style="opacity:.5">/</span> Made for Indian homes</div>
+        <h2 class="h2 mt-7 max-w-[22rem] lg:max-w-[34rem]">Designed for the way India lives.</h2>
+      </div>
+    </div>
+
+    <!-- cards physically travel right to left (73) -->
+    <div id="rail-track" class="flex gap-7 lg:gap-10 no-bar"
+         style="padding-inline:max(24px,calc((100vw - min(82vw,384px))/2))">
+
+      <article class="fcard live">
+        <h3 class="h4">Inverter switchover</h3>
+        <p class="body mt-4 min-h-[7.5rem]">Zero flicker. Heavy loads step down smoothly so
+          the battery is saved for the fans and the lights you actually want.</p>
+        <div class="micro mt-2" style="color:var(--ink-40)">Backup budget</div>
+        <div class="flex items-baseline justify-between mt-2 mb-3">
+          <span class="text-[19px]">9.4 hours</span>
+        </div>
+        <div class="meter"><i style="width:80%;background:#F0ECE4"></i></div>
+      </article>
+
+      <article class="fcard">
+        <h3 class="h4">Tank auto-level</h3>
+        <p class="body mt-4 min-h-[7.5rem]">Aligned to your municipal supply hours. It never
+          runs dry at eight in the morning, and never overflows onto the balcony.</p>
+        <div class="micro mt-2" style="color:var(--ink-40)">Overhead reserve</div>
+        <div class="flex items-baseline justify-between mt-2 mb-3">
+          <span class="text-[19px]">92% optimal</span>
+        </div>
+        <div class="meter"><i style="width:92%;background:#F0ECE4"></i></div>
+      </article>
+
+      <article class="fcard">
+        <h3 class="h4">Piped gas cutoff</h3>
+        <p class="body mt-4 min-h-[7.5rem]">A mechanical valve in the kitchen closes the
+          moment something is wrong — long before gas can gather in a room.</p>
+        <div class="micro mt-2" style="color:var(--ink-40)">Mechanical valve</div>
+        <div class="flex items-baseline justify-between mt-2 mb-3">
+          <span class="text-[19px]">Latched &amp; monitored</span>
+        </div>
+        <div class="meter"><i style="width:100%;background:#F0ECE4"></i></div>
+      </article>
+
+      <article class="fcard">
+        <h3 class="h4">Festivals and rituals</h3>
+        <p class="body mt-4 min-h-[7.5rem]">A warm diya glow through Diwali, a calm dawn for
+          morning pooja, gentler air through the monsoon weeks.</p>
+        <div class="micro mt-2" style="color:var(--ink-40)">Festival ambiance</div>
+        <div class="flex items-baseline justify-between mt-2 mb-3">
+          <span class="text-[19px]">Diya preset ready</span>
+        </div>
+        <div class="meter"><i style="width:100%;background:#F0ECE4"></i></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ 05 · WHY YOU CAN TRUST IT -->
+<!-- reassurance gets real space; never buried in a card (86, 87) -->
+<section id="trust" class="sec">
+  <div class="wrap">
+    <div class="eyebrow settle">05 <span style="opacity:.5">/</span> Why you can trust it</div>
+
+    <div class="mt-20 lg:mt-28 grid grid-cols-1 gap-y-20 lg:gap-y-28">
+
+      <div class="grid grid-cols-1 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <hr class="hair rule">
+          <h3 class="h2 mt-8"><span class="rise"><span>Your switches still work.</span></span></h3>
+          <p class="body settle mt-6 max-w-[30rem]">Exactly as before. Every plate on every
+            wall keeps doing what it always did — and the room answers to it first.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12">
+        <div class="lg:col-span-7 lg:col-start-4">
+          <hr class="hair rule">
+          <h3 class="h2 mt-8"><span class="rise"><span>Nothing to learn.</span></span></h3>
+          <p class="body settle mt-6 max-w-[30rem]">No app to master, no commands to
+            memorise, no settings to keep tuning. If you never open anything, the home
+            still runs.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <hr class="hair rule">
+          <h3 class="h2 mt-8"><span class="rise"><span>Works in a power cut.</span></span></h3>
+          <p class="body settle mt-6 max-w-[30rem]">And when the internet is down. The home
+            keeps its own rhythm locally, so comfort does not depend on a connection
+            somewhere else.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mt-24 lg:mt-32 flex flex-col sm:flex-row sm:items-center gap-6 settle">
+      <p class="h4" style="color:var(--ink-70)">Start small — begin with one room.</p>
+      <a href="#pricing" class="btn btn-ghost btn-sm sm:ml-auto">Start with one room</a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 06 · CONTROL -->
+<section id="control" class="sec">
+  <div class="wrap grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-10 items-center">
+
+    <div class="lg:col-span-5">
+      <div class="eyebrow settle">06 <span style="opacity:.5">/</span> Your control</div>
+      <h2 class="h2 mt-8">
+        <span class="rise"><span>You're always</span></span>
+        <span class="rise"><span>in control.</span></span>
+      </h2>
+      <p class="lead settle mt-9 max-w-[27rem]">
+        Switchless does things for you. You decide what it is allowed to do. Approve a
+        rhythm once, and it runs quietly in the background — until you change your mind.
+      </p>
+    </div>
+
+    <!-- the UI is supporting evidence, not the hero (34) -->
+    <div class="lg:col-span-6 lg:col-start-7">
+      <div id="consent" class="approach card" style="background:rgba(24,24,28,.6);
+           border-radius:var(--r-xl); padding:clamp(24px,3vw,38px)">
+
+        <div class="flex items-center gap-3">
+          <i style="width:5px;height:5px;border-radius:50%;background:var(--c-gold);
+                    box-shadow:0 0 9px rgba(245,183,90,.5)"></i>
+          <span class="micro" style="color:var(--ink-40)">Recurring rhythm detected</span>
+        </div>
+
+        <h3 class="h4 mt-7">Living room · 10:30 pm night settle</h3>
+        <p class="body mt-3">We noticed you adjust this room the same way most evenings.
+          Make this rhythm automatic?</p>
+
+        <div id="rows" class="mt-8 flex flex-col gap-1.5">
+          <label class="rowitem"><input type="checkbox" class="tick">
+            <span>Dim the living room to 15% warm amber</span></label>
+          <label class="rowitem"><input type="checkbox" class="tick">
+            <span>Close the courtyard sheer blinds</span></label>
+          <label class="rowitem"><input type="checkbox" class="tick">
+            <span>Pre-cool the bedroom</span></label>
+          <label class="rowitem"><input type="checkbox" class="tick">
+            <span>Keep the entryway path faintly lit</span></label>
+          <label class="rowitem"><input type="checkbox" class="tick">
+            <span>Switch off the rest of the interior lighting</span></label>
+        </div>
+
+        <div class="mt-8 pt-7 flex items-center justify-between gap-4"
+             style="border-top:1px solid var(--edge)">
+          <span class="micro num" id="counter" style="color:var(--ink-40)">0 / 4 selected</span>
+          <button id="approve" class="btn btn-ghost btn-sm">Approve routine</button>
+        </div>
+        <p id="approved-note" class="body mt-5 text-right"
+           style="opacity:0;transition:opacity var(--d-slow) var(--e-out);color:var(--c-green)">
+          Switchless will handle this from now on.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== 07 · INSTALLERS -->
+<section id="installers" class="sec">
+  <div class="wrap grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-10">
+    <div class="lg:col-span-5">
+      <div class="eyebrow settle">07 <span style="opacity:.5">/</span> For installers</div>
+      <h2 class="h2 mt-8">
+        <span class="rise"><span>A self-running home,</span></span>
+        <span class="rise"><span>set up in an afternoon.</span></span>
+      </h2>
+      <p class="lead settle mt-9 max-w-[26rem]">
+        Less time in configuration, and a home your client experiences as calm rather
+        than complicated.
+      </p>
+      <a href="mailto:hello@switchless.in" class="btn btn-metal btn-sm mt-10 settle">Talk to us</a>
+    </div>
+
+    <div class="lg:col-span-6 lg:col-start-7">
+      <ol class="flex flex-col">
+        <li class="settle py-7" style="border-top:1px solid var(--edge)">
+          <div class="flex gap-6">
+            <span class="micro num pt-1" style="color:var(--ink-25)">01</span>
+            <div><h3 class="h4">Upload the project file</h3>
+              <p class="body mt-2 max-w-[26rem]">Built around the KNX project you already
+                have. Nothing to re-enter by hand.</p></div>
+          </div>
+        </li>
+        <li class="settle py-7" style="border-top:1px solid var(--edge)">
+          <div class="flex gap-6">
+            <span class="micro num pt-1" style="color:var(--ink-25)">02</span>
+            <div><h3 class="h4">Switchless checks it</h3>
+              <p class="body mt-2 max-w-[26rem]">It reads the structure of the home and
+                looks for what doesn't add up.</p></div>
+          </div>
+        </li>
+        <li class="settle py-7" style="border-top:1px solid var(--edge)">
+          <div class="flex gap-6">
+            <span class="micro num pt-1" style="color:var(--ink-25)">03</span>
+            <div><h3 class="h4">It helps you fix what's off</h3>
+              <p class="body mt-2 max-w-[26rem]">Clear, specific corrections instead of a
+                wall of warnings.</p></div>
+          </div>
+        </li>
+        <li class="settle py-7"
+            style="border-top:1px solid var(--edge);border-bottom:1px solid var(--edge)">
+          <div class="flex gap-6">
+            <span class="micro num pt-1" style="color:var(--ink-25)">04</span>
+            <div><h3 class="h4">Then it configures the home</h3>
+              <p class="body mt-2 max-w-[26rem]">You commission and hand over. The
+                self-managing behaviour keeps growing from there.</p></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= 08 · PRICING -->
+<section id="pricing" class="sec">
+  <div class="wrap">
+    <div class="max-w-[40rem]">
+      <div class="eyebrow settle">08 <span style="opacity:.5">/</span> Pricing</div>
+      <h2 class="h2 mt-8">
+        <span class="rise"><span>Start small. Let your</span></span>
+        <span class="rise"><span>home grow into it.</span></span>
+      </h2>
+      <p class="lead settle mt-9">One room is enough to begin with. Add more when it has
+        earned your trust.</p>
+    </div>
+
+    <div class="mt-20 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+      <div class="card settle" style="padding:clamp(28px,2.6vw,40px)">
+        <div class="micro" style="color:var(--ink-40)">Essentials</div>
+        <h3 class="h3 mt-4">Standard</h3>
+        <p class="body mt-3">For apartments and smaller homes.</p>
+        <ul class="mt-9 flex flex-col gap-3.5 text-[14.5px]" style="color:var(--ink-70)">
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> One-room automation</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Lighting and appliance control</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Schedules and routines</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Basic occupancy awareness</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Control from your phone</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Arrival and departure</li>
+        </ul>
+        <a href="mailto:hello@switchless.in" class="btn btn-ghost btn-block mt-11">Start with one room</a>
+      </div>
+
+      <div class="card settle relative lg:-mt-6"
+           style="background:var(--c-elev);padding:clamp(30px,2.8vw,46px);
+                  border-color:rgba(240,236,228,.1);box-shadow:0 30px 80px -50px rgba(0,0,0,.9)">
+        <div style="position:absolute;inset:0 24px auto 24px;height:1px;
+                    background:linear-gradient(90deg,transparent,rgba(245,183,90,.55),transparent)"></div>
+        <div class="flex items-center justify-between gap-4">
+          <div class="micro" style="color:var(--ink-40)">Full experience</div>
+          <div class="micro" style="color:#F0ECE4">Most chosen</div>
+        </div>
+        <h3 class="h3 mt-4">Pro</h3>
+        <p class="body mt-3">For a whole home, room by room.</p>
+        <ul class="mt-9 flex flex-col gap-3.5 text-[14.5px]" style="color:var(--ink-70)">
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Multi-room automation</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Whole-home routines</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Climate that looks after itself</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Lighting scenes</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Advanced occupancy logic</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Arrival and departure intelligence</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Energy-aware behaviour</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Priority support</li>
+        </ul>
+        <a href="mailto:hello@switchless.in" class="btn btn-metal btn-block mt-11">Configure your home</a>
+      </div>
+
+      <div class="card settle" style="padding:clamp(28px,2.6vw,40px)">
+        <div class="micro" style="color:var(--ink-40)">Whole-home premium</div>
+        <h3 class="h3 mt-4">Villa</h3>
+        <p class="body mt-3">For a complete residence, commissioned for you.</p>
+        <ul class="mt-9 flex flex-col gap-3.5 text-[14.5px]" style="color:var(--ink-70)">
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Complete residence automation</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Multi-zone control</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Custom automation logic</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Dedicated commissioning</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> White-glove setup</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Bespoke configuration</li>
+          <li class="flex gap-3.5"><span style="color:var(--ink-25)">—</span> Priority support</li>
+        </ul>
+        <a href="mailto:hello@switchless.in" class="btn btn-metal btn-block mt-11">Configure your home</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== FINAL · CTA (90) -->
+<section id="close" class="relative overflow-hidden"
+         style="padding-block:clamp(120px,17vw,240px)">
+  <div class="wrap relative text-center">
+    <h2 class="h2 mx-auto max-w-[24rem] sm:max-w-none">
+      <span class="rise"><span>Stop running your home.</span></span>
+      <span class="rise"><span><em>Start enjoying it.</em></span></span>
+    </h2>
+    <div class="settle mt-14 flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="#pricing" class="btn btn-metal">Start with one room</a>
+      <a href="#day" class="btn btn-ghost">See how it works</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= FOOTER (91–93) -->
+<footer class="relative" style="padding-block:clamp(80px,9vw,120px) 40px">
+  <div class="wrap">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+      <div>
+        <h2 class="h3 max-w-[22rem]">Your home should take care of itself.</h2>
+        <p class="body mt-4">Let Switchless handle the rhythm.</p>
+      </div>
+      <a href="#pricing" class="btn btn-metal btn-sm self-start lg:self-auto">Start with one room</a>
+    </div>
+
+    <div class="mt-24 lg:mt-32 grid grid-cols-2 lg:grid-cols-4 gap-y-12 gap-x-8 text-[14px]">
+      <div>
+        <div class="micro" style="color:var(--ink-25)">Explore</div>
+        <ul class="mt-6 flex flex-col gap-3.5" style="color:var(--ink-55)">
+          <li><a href="#chore" class="navlink">The daily chore</a></li>
+          <li><a href="#idea" class="navlink">The idea</a></li>
+          <li><a href="#day" class="navlink">A day</a></li>
+          <li><a href="#trust" class="navlink">Trust</a></li>
+          <li><a href="#pricing" class="navlink">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="micro" style="color:var(--ink-25)">Product</div>
+        <ul class="mt-6 flex flex-col gap-3.5" style="color:var(--ink-55)">
+          <li><a href="#idea" class="navlink">How it works</a></li>
+          <li><a href="#control" class="navlink">Your control</a></li>
+          <li><a href="#india" class="navlink">Indian homes</a></li>
+          <li><a href="#installers" class="navlink">For installers</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="micro" style="color:var(--ink-25)">Company</div>
+        <ul class="mt-6 flex flex-col gap-3.5" style="color:var(--ink-55)">
+          <li><a href="mailto:hello@switchless.in" class="navlink">Contact</a></li>
+          <li><a href="#" class="navlink">About</a></li>
+          <li><a href="#" class="navlink">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="micro" style="color:var(--ink-25)">Connect</div>
+        <ul class="mt-6 flex flex-col gap-3.5" style="color:var(--ink-55)">
+          <li><a href="#" class="navlink">Instagram</a></li>
+          <li><a href="#" class="navlink">LinkedIn</a></li>
+          <li><a href="mailto:hello@switchless.in" class="navlink">hello@switchless.in</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-24 pt-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6"
+         style="border-top:1px solid var(--edge)">
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 100 100" aria-hidden="true" style="opacity:.75">
+          <path d="M 23.13,23.13 A 38 38 0 0 1 88 50 A 38 38 0 0 1 50 88 A 19 19 0 0 1 50 50
+                   A 19 19 0 0 0 50 12 A 38 38 0 0 0 12 50 A 38 38 0 0 0 23.13 76.87"
+                fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <div class="brand-word">SWITCHLESS</div>
+          <div class="mt-1.5 text-[13px]" style="color:var(--ink-40)">
+            Living architecture, orchestrated quietly.</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5 self-start sm:self-auto">
+        <i style="width:5px;height:5px;border-radius:50%;background:var(--c-green);opacity:.8"></i>
+        <span class="micro" style="color:var(--ink-40)">System quiet</span>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col sm:flex-row justify-between gap-4 text-[12px]"
+         style="color:var(--ink-25)">
+      <div class="flex flex-wrap gap-x-7 gap-y-2">
+        <span>© 2026 Switchless</span>
+        <a href="#" class="navlink" style="font-size:12px">Privacy</a>
+        <a href="#" class="navlink" style="font-size:12px">Terms</a>
+        <span>Made for quieter homes.</span>
+      </div>
+      <button id="totop" class="text-left sm:text-right" style="font-size:12px">
+        Back to top ↑</button>
+    </div>
+  </div>
+</footer>
+
+<!-- shared paint servers for the warm light in the small proofs -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#F5B75A" stop-opacity=".85"/>
+    <stop offset="1" stop-color="#F5B75A" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="warmpool">
+    <stop offset="0" stop-color="#F5B75A" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#F5B75A" stop-opacity="0"/>
+  </radialGradient>
+</defs></svg>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+  var html = document.documentElement;
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (REDUCED) html.classList.add('reduced');
+  gsap.registerPlugin(ScrollTrigger);
+
+
+  /* =====================================================================
+     THE DAY — one master timeline.  Sun position, sky, ambient brightness,
+     interior light, curtains and the fan are all read off the same clock,
+     so every change has a cause.  (Style.md 51, 61)
+     ===================================================================== */
+  /* Where the residents stand and where the camera parks, both projected
+     by gen_house.py from the same drawing, so a change to the plan can
+     never leave the people or the shots behind. */
+  var WP = {bedside:[64.3,9.1],bath:[-49.0,-44.7],hall:[-5.2,-21.9],sofa:[-76.5,107.5],console:[-26.0,127.7],veranda:[24.5,192.0],away:[61.2,235.7]};
+  var CAM = {bed:[94.9,-63.0],bath:[-44.4,-107.2],hall:[10.7,-83.2],liv:[-70.4,57.8],entry:[30.6,133.3],path:[58.1,184.8]};
+  /* THE SHOT LIST
+     Each row is one moment of a single day AND one camera setup, because
+     in this hero they are the same thing: the story is told by walking a
+     camera from room to room behind the resident, not by looking at a
+     building.
+
+       cam/camW  where the camera parks and how wide it frames. The camera
+                 IS the SVG viewBox -- the drawing is never scaled, the
+                 frame is just moved and narrowed around one room.
+       ext       how much of the outdoors this shot admits. Interior shots
+                 fade the terrace and pull the sun back; the departure and
+                 arrival shots open out to the entrance.
+       L*        the house's ORDINARY SCHEDULE -- what the hour alone would
+                 ask for.
+       home      somebody is in, 0..1. paintHouse multiplies every indoor
+                 light and both fans by it, so an empty house cannot light
+                 itself whatever the time, and an arrival hands control back
+                 to the schedule rather than switching everything on.
+       ac        deliberately outside that gate: the one thing allowed to
+                 run for somebody who has not arrived yet.
+       fanBed    the bedroom fan's own state, so it can stop when he walks
+                 out of that room while the living room carries on. */
+  var STOPS = [
+    /* he is asleep; only the porch and the path are awake */
+    { p:0.00, name:'Dawn', clock:'05:40', act:'night mode',
+      top:'#0B0D18', bot:'#1d2742', warm:'#6b4436', warmA:0.62,
+      sunX:7, sunY:86, sunOp:0.22, sunR:158, core:'#E8915A',
+      exp:0.34, amb:'#2b3a5c', ambA:0.58,
+      Lliv:0.00, Lkit:0.00, Lbed:0.14, Lbath:0.00, Lgey:0.00, Lstair:0.00, Lpor:1.00, Lpth:0.72,
+      cu:0.04, fan:0.00, fanBed:0.00, ac:0.00, steam:0.00, bedO:1.00,
+      fuX:WP.bedside[0], fuY:WP.bedside[1], fuO:0, fgX:WP.sofa[0], fgY:WP.sofa[1], fgO:0, home:1.00,
+      camX:CAM.bed[0], camY:CAM.bed[1], camW:216, ext:0.15 },
+
+    /* in the bedroom: curtains part, the lamp steps down, the geyser starts warming */
+    { p:0.08, name:'Waking', clock:'06:20', act:'curtains opening',
+      top:'#1b3055', bot:'#5c7ea6', warm:'#d69a6a', warmA:0.42,
+      sunX:11, sunY:72, sunOp:0.40, sunR:142, core:'#F0A366',
+      exp:0.48, amb:'#6d7f9c', ambA:0.46,
+      Lliv:0.00, Lkit:0.10, Lbed:0.30, Lbath:0.10, Lgey:0.55, Lstair:0.06, Lpor:0.85, Lpth:0.40,
+      cu:0.55, fan:0.18, fanBed:0.55, ac:0.00, steam:0.05, bedO:0.00,
+      fuX:WP.bedside[0], fuY:WP.bedside[1], fuO:1, fgX:WP.sofa[0], fgY:WP.sofa[1], fgO:0, home:1.00,
+      camX:CAM.bed[0], camY:CAM.bed[1], camW:220, ext:0.22 },
+
+    /* the camera follows him next door. He has left the bedroom, so the bedroom fan and lamp go with him */
+    { p:0.17, name:'Morning', clock:'07:10', act:'water ready',
+      top:'#3a5470', bot:'#aebbbe', warm:'#f8c78c', warmA:0.36,
+      sunX:18, sunY:54, sunOp:0.86, sunR:138, core:'#FFCE8E',
+      exp:0.72, amb:'#e2d9c6', ambA:0.30,
+      Lliv:0.04, Lkit:0.30, Lbed:0.06, Lbath:0.62, Lgey:1.00, Lstair:0.10, Lpor:0.15, Lpth:0.00,
+      cu:1.00, fan:0.10, fanBed:0.00, ac:0.00, steam:0.85, bedO:0.00,
+      fuX:WP.bath[0], fuY:WP.bath[1], fuO:1, fgX:WP.console[0], fgY:WP.console[1], fgO:0, home:1.00,
+      camX:CAM.bath[0], camY:CAM.bath[1], camW:208, ext:0.16 },
+
+    /* out onto the landing, heading for the stair */
+    { p:0.27, name:'Morning', clock:'08:15', act:'daylight — lights off',
+      top:'#4a6f93', bot:'#b3c8d4', warm:'#ffdcae', warmA:0.18,
+      sunX:30, sunY:28, sunOp:0.97, sunR:124, core:'#FFE9BE',
+      exp:0.90, amb:'#e8e6dc', ambA:0.20,
+      Lliv:0.26, Lkit:0.30, Lbed:0.00, Lbath:0.18, Lgey:0.10, Lstair:0.14, Lpor:0.00, Lpth:0.00,
+      cu:1.00, fan:0.15, fanBed:0.00, ac:0.00, steam:0.18, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:1, fgX:WP.console[0], fgY:WP.console[1], fgO:0, home:1.00,
+      camX:CAM.hall[0], camY:CAM.hall[1], camW:232, ext:0.26 },
+
+    /* the camera rides down the stairwell with him and settles in the living room -- one move, no cut */
+    { p:0.32, name:'Morning', clock:'08:40', act:'downstairs',
+      top:'#47749b', bot:'#b7cbd6', warm:'#ffe2b8', warmA:0.17,
+      sunX:34, sunY:22, sunOp:0.99, sunR:122, core:'#FFEDC6',
+      exp:0.94, amb:'#eae8de', ambA:0.19,
+      Lliv:0.24, Lkit:0.26, Lbed:0.00, Lbath:0.06, Lgey:0.04, Lstair:0.10, Lpor:0.00, Lpth:0.00,
+      cu:1.00, fan:0.85, fanBed:0.00, ac:0.00, steam:0.06, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.sofa[0], fgY:WP.sofa[1], fgO:1, home:1.00,
+      camX:CAM.liv[0], camY:CAM.liv[1], camW:274, ext:0.40 },
+
+    /* he crosses to the door. The room he is leaving goes quiet behind him, in view */
+    { p:0.37, name:'Away', clock:'09:40', act:'nobody home · lights off',
+      top:'#57809f', bot:'#bdd0da', warm:'#ffffff', warmA:0.15,
+      sunX:40, sunY:15, sunOp:1.00, sunR:120, core:'#FFF3D6',
+      exp:0.98, amb:'#ece9df', ambA:0.16,
+      Lliv:0.18, Lkit:0.20, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.08, Lpor:0.00, Lpth:0.00,
+      cu:1.00, fan:0.70, fanBed:0.00, ac:0.00, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.veranda[0], fgY:WP.veranda[1], fgO:1, home:0.00,
+      camX:CAM.liv[0], camY:CAM.liv[1], camW:286, ext:0.55 },
+
+    /* the one shot that opens out, and only as far as the entrance */
+    { p:0.48, name:'Away', clock:'12:20', act:'away · saving energy',
+      top:'#5d86a8', bot:'#c3d5df', warm:'#ffffff', warmA:0.14,
+      sunX:52, sunY:11, sunOp:1.00, sunR:118, core:'#FFF3D6',
+      exp:1.00, amb:'#f0efe8', ambA:0.14,
+      Lliv:0.00, Lkit:0.00, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.00, Lpor:0.00, Lpth:0.00,
+      cu:1.00, fan:0.00, fanBed:0.00, ac:0.00, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.away[0], fgY:WP.away[1], fgO:0, home:0.00,
+      camX:CAM.entry[0], camY:CAM.entry[1], camW:326, ext:1.00 },
+
+    /* the afternoon passes over an empty, quiet house */
+    { p:0.58, name:'Away', clock:'15:10', act:'away · saving energy',
+      top:'#587a9f', bot:'#bccdd9', warm:'#ffe9c9', warmA:0.16,
+      sunX:64, sunY:22, sunOp:0.96, sunR:122, core:'#FFEFC8',
+      exp:0.94, amb:'#ebe6da', ambA:0.17,
+      Lliv:0.00, Lkit:0.00, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.00, Lpor:0.00, Lpth:0.00,
+      cu:0.96, fan:0.00, fanBed:0.00, ac:0.00, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.away[0], fgY:WP.away[1], fgO:0, home:0.00,
+      camX:CAM.entry[0], camY:CAM.entry[1], camW:320, ext:1.00 },
+
+    /* back inside the empty living room to watch the AC start. Nobody is in the frame, which is the entire point */
+    { p:0.67, name:'Evening', clock:'17:40', act:'pre-cooling · nobody home yet',
+      top:'#55688c', bot:'#c6b79e', warm:'#ffd6a0', warmA:0.30,
+      sunX:74, sunY:36, sunOp:0.88, sunR:132, core:'#FFD9A0',
+      exp:0.82, amb:'#ddd0bd', ambA:0.22,
+      Lliv:0.30, Lkit:0.10, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.06, Lpor:0.10, Lpth:0.00,
+      cu:0.72, fan:0.62, fanBed:0.00, ac:0.85, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.away[0], fgY:WP.away[1], fgO:0, home:0.00,
+      camX:CAM.liv[0], camY:CAM.liv[1], camW:276, ext:0.45 },
+
+    /* he is on the path and the house is still dark. Only the AC is running */
+    { p:0.72, name:'Arriving', clock:'18:15', act:'ac on · still outside',
+      top:'#53607f', bot:'#cbac86', warm:'#fcc78c', warmA:0.39,
+      sunX:78, sunY:42, sunOp:0.84, sunR:139, core:'#FCC589',
+      exp:0.75, amb:'#dfc4a8', ambA:0.25,
+      Lliv:0.16, Lkit:0.04, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.02, Lpor:0.42, Lpth:0.10,
+      cu:0.66, fan:0.60, fanBed:0.00, ac:0.95, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.veranda[0], fgY:WP.veranda[1], fgO:1, home:0.00,
+      camX:CAM.entry[0], camY:CAM.entry[1], camW:312, ext:0.92 },
+
+    /* he steps in and the schedule takes over again */
+    { p:0.75, name:'Arrival', clock:'18:35', act:'home · schedule resumes',
+      top:'#52597c', bot:'#d1a06c', warm:'#f9b878', warmA:0.46,
+      sunX:81, sunY:47, sunOp:0.80, sunR:146, core:'#F8B172',
+      exp:0.68, amb:'#e0b892', ambA:0.28,
+      Lliv:0.52, Lkit:0.16, Lbed:0.00, Lbath:0.00, Lgey:0.00, Lstair:0.14, Lpor:0.80, Lpth:0.30,
+      cu:0.60, fan:0.85, fanBed:0.00, ac:0.70, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.veranda[0], fgY:WP.veranda[1], fgO:1, home:1.00,
+      camX:CAM.entry[0], camY:CAM.entry[1], camW:296, ext:0.62 },
+
+    /* the sun hands over to the lamps, with him in the room */
+    { p:0.83, name:'Dusk', clock:'19:20', act:'evening light',
+      top:'#54486f', bot:'#e28844', warm:'#ffa752', warmA:0.72,
+      sunX:88, sunY:64, sunOp:0.74, sunR:172, core:'#F08A3C',
+      exp:0.52, amb:'#e8a061', ambA:0.40,
+      Lliv:0.72, Lkit:0.44, Lbed:0.12, Lbath:0.00, Lgey:0.00, Lstair:0.10, Lpor:0.95, Lpth:0.60,
+      cu:0.44, fan:0.90, fanBed:0.20, ac:0.45, steam:0.00, bedO:0.00,
+      fuX:WP.hall[0], fuY:WP.hall[1], fuO:0, fgX:WP.sofa[0], fgY:WP.sofa[1], fgO:1, home:1.00,
+      camX:CAM.liv[0], camY:CAM.liv[1], camW:274, ext:0.42 },
+
+    /* upstairs again. Only the rooms in use are lit */
+    { p:0.93, name:'Night', clock:'22:30', act:'night mode',
+      top:'#07080c', bot:'#131a2b', warm:'#2a2028', warmA:0.40,
+      sunX:96, sunY:97, sunOp:0.00, sunR:150, core:'#7A5C46',
+      exp:0.19, amb:'#1a2336', ambA:0.55,
+      Lliv:0.40, Lkit:0.06, Lbed:0.72, Lbath:0.16, Lgey:0.00, Lstair:0.22, Lpor:1.00, Lpth:0.85,
+      cu:0.10, fan:0.40, fanBed:0.60, ac:0.20, steam:0.00, bedO:0.00,
+      fuX:WP.bedside[0], fuY:WP.bedside[1], fuO:1, fgX:WP.console[0], fgY:WP.console[1], fgO:0, home:1.00,
+      camX:CAM.bed[0], camY:CAM.bed[1], camW:220, ext:0.18 },
+
+    /* closes exactly on the opening frame */
+    { p:1.00, name:'Dawn', clock:'05:40', act:'night mode',
+      top:'#0B0D18', bot:'#1d2742', warm:'#6b4436', warmA:0.62,
+      sunX:7, sunY:86, sunOp:0.22, sunR:158, core:'#E8915A',
+      exp:0.34, amb:'#2b3a5c', ambA:0.58,
+      Lliv:0.00, Lkit:0.00, Lbed:0.14, Lbath:0.00, Lgey:0.00, Lstair:0.00, Lpor:1.00, Lpth:0.72,
+      cu:0.04, fan:0.00, fanBed:0.00, ac:0.00, steam:0.00, bedO:1.00,
+      fuX:WP.bedside[0], fuY:WP.bedside[1], fuO:0, fgX:WP.sofa[0], fgY:WP.sofa[1], fgO:0, home:1.00,
+      camX:CAM.bed[0], camY:CAM.bed[1], camW:216, ext:0.15 }
+  ];
+
+  /* every light lags a little behind the one before it, so the house never
+     switches — it settles, in a wave (taper, don't cut) */
+  var LAG = { liv:0, bed:0.014, bath:0.022, gey:0.006, kit:0.030,
+              stair:0.044, por:0.058, pth:0.072 };
+
+  /* base materials: warm stone, plaster, teak, planting  (32) */
+  /* base materials: warm stone, plaster, teak, planting  (32).
+     The stone carries a little more amber than daylight alone would give
+     it, so the residence belongs to the same warm-luxury family as the rest
+     of the page instead of reading as cool grey concrete against it. */
+  var MATS = {
+    mg:['#2e2922','t'],  mp:['#736758','t'],  jt:['#4e4436','t'],
+    mwy:['#8a7862','y'], mwx:['#8a7862','x'], mwi:['#786754','x'], min:['#54463a','t'],
+    mr:['#95836c','t'],  mt:['#95836c','t'],  cap:['#b09a80','t'], band:['#756654','y'],
+    mx:['#584a3d','x'],  my:['#4b4036','y'],  st2:['#a59279','t'],
+    rev:['#1f1c19','f'], frm:['#57524c','f'], brass:['#b08a4a','x'],
+    wd:['#6d4c2f','t'],  wd2:['#583d26','x'], wd3:['#47311e','y'],
+    rug:['#4d4239','t'], veg:['#41573f','t'], veg2:['#2f4031','y'], trunk:['#3b3129','f'],
+    mtk:['#706c65','t'], mtk2:['#59554f','x'], mtk3:['#4b4741','y'],
+    cu:['#e6dfd2','y'],  shade:['#d8cdb8','f'], fanb:['#3c362f','f'], fanh:['#58514b','f'],
+    /* the cutaway interior: the back walls read a shade deeper than the
+       side wall so the rooms have depth, and the linens stay the lightest
+       thing indoors so a bed is legible even at night */
+    mwj:['#746251','y'], tile:['#665849','t'], void:['#1c1814','t'], trd:['#514438','t'],
+    bedt:['#d3c6ad','t'], lin:['#e6dcc8','t'], lin2:['#b9ac95','x'],
+    duv:['#a3907a','t'],  duv2:['#8a7866','x'], duv3:['#756555','y'],
+    gey:['#c0b2a0','x'],  gey2:['#a89880','y'], gey3:['#d0c3ad','t'],
+    acb:['#dbd0bd','x'],  acb2:['#c2b6a0','y'],
+    figb:['#ddc9ab','f'], figh:['#9c7250','f'], figo:['#2a221b','f']
+  };
+
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function smooth(t) { return t * t * (3 - 2 * t); }
+  function rgb(h) {
+    var n = parseInt(h.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function hex(c) {
+    return '#' + ((1 << 24) + (Math.round(c[0]) << 16) + (Math.round(c[1]) << 8)
+      + Math.round(c[2])).toString(16).slice(1);
+  }
+  function mix(a, b, t) {
+    var x = rgb(a), y = rgb(b);
+    return hex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]);
+  }
+  function mul(h, k) {
+    var c = rgb(h);
+    return hex([clamp(c[0] * k, 0, 255), clamp(c[1] * k, 0, 255), clamp(c[2] * k, 0, 255)]);
+  }
+  /* the modulo round-trip perturbs an in-range p by an ulp, which is enough
+     to make a value sitting exactly on a stop sample the stop before it */
+  function wrap01(p) { return (p >= 0 && p < 1) ? p : ((p % 1) + 1) % 1; }
+
+  function sample(p) {
+    p = wrap01(p);
+    var i = 0;
+    while (i < STOPS.length - 2 && p >= STOPS[i + 1].p) i++;
+    var a = STOPS[i], b = STOPS[i + 1];
+    var t = smooth(clamp((p - a.p) / (b.p - a.p), 0, 1));
+    var o = { name:a.name, clock:a.clock, act:a.act };
+    for (var k in a) {
+      if (k === 'p' || k === 'name' || k === 'clock' || k === 'act') continue;
+      if (typeof a[k] === 'string') o[k] = mix(a[k], b[k], t);
+      else o[k] = a[k] + (b[k] - a[k]) * t;
+    }
+    return o;
+  }
+
+  /* the sky and the sun live on their own small subtree, so the per-frame
+     work never invalidates the residence  (107) */
+  function paintSky(p) {
+    var s = sample(p);
+    var w = rgb(s.warm);
+    var vals = [
+      ['--sky-top', s.top],
+      ['--sky-bot', s.bot],
+      ['--sky-warm', 'rgba(' + w[0] + ',' + w[1] + ',' + w[2] + ','
+        + s.warmA.toFixed(3) + ')'],
+      ['--sun-x', s.sunX.toFixed(2) + '%'],
+      ['--sun-y', s.sunY.toFixed(2) + '%'],
+      ['--sun-op', s.sunOp.toFixed(3)],
+      ['--sun-r', s.sunR.toFixed(0) + 'px'],
+      ['--sun-core', s.core]
+    ];
+    for (var i = 1; i < arguments.length; i++) {
+      var el = arguments[i];
+      if (!el) continue;
+      for (var j = 0; j < vals.length; j++) el.style.setProperty(vals[j][0], vals[j][1]);
+    }
+    return s;
+  }
+
+  function paintHouse(p, el, s) {
+    s = s || sample(p);
+    var up = clamp((92 - s.sunY) / 78, 0, 1);
+    var day = clamp(s.sunOp, 0, 1);
+    var fromL = s.sunX / 100;
+    var lit = {
+      t: 0.30 + 0.70 * up * day,
+      y: 0.30 + 0.70 * clamp(1 - 2 * fromL, 0, 1) * day,
+      x: 0.30 + 0.70 * clamp(2 * fromL - 1, 0, 1) * day,
+      f: 0.42
+    };
+    var st = el.style;
+    var roof = null;
+    for (var k in MATS) {
+      var f = lit[MATS[k][1]];
+      var c = mul(MATS[k][0], s.exp * (0.62 + 0.46 * f));
+      var out = mix(c, s.amb, s.ambA * (1 - 0.3 * f));
+      if (k === 'mr') roof = out;
+      st.setProperty('--m-' + k, out);
+    }
+    /* The slab is only ever seen from outside now, so it is simply the roof
+       and takes the roof's own light -- it must not be darkened by anything
+       other than the sun. */
+    st.setProperty('--m-ceil', roof);
+    st.setProperty('--refl', mul(s.bot, 0.82));
+    /* the shadow leans away from the sun and shortens as it climbs */
+    st.setProperty('--sh-skew', (-30 + 60 * fromL).toFixed(1) + 'deg');
+    st.setProperty('--sh-len', (0.45 + 0.9 * (1 - up)).toFixed(2));
+    st.setProperty('--sh-op', (0.06 + 0.20 * up * day).toFixed(3));
+    /* Presence, not the hour, has the last word indoors. Each light still
+       runs on its own slight delay, so the house settles in a wave rather
+       than switching; multiplying by `home` means that wave also carries
+       the departure -- lights go out one after another behind him instead
+       of all at once, and the schedule cannot bring them back until he is
+       actually walking up the path again. The porch and the path are
+       outdoor lighting and stay on the clock. */
+    var home = clamp(s.home, 0, 1);
+    var INDOOR = { liv:1, bed:1, bath:1, kit:1, stair:1, gey:1 };
+    for (var key in LAG) {
+      var lv = sample(p - LAG[key])['L' + key];
+      if (INDOOR[key]) lv *= clamp(sample(p - LAG[key]).home, 0, 1);
+      st.setProperty('--l-' + key, lv.toFixed(3));
+    }
+    st.setProperty('--cu', s.cu.toFixed(3));
+    /* the fans belong to the people in the room, so they stop when he goes */
+    var fan = s.fan * home;
+    /* the threshold sits above the tail of the presence ramp, so a fan never
+       starts while he is still on the path */
+    st.setProperty('--fan-play', fan > 0.22 && !REDUCED ? 'running' : 'paused');
+    st.setProperty('--fan-dur', (7.4 - 5.2 * clamp(fan, 0, 1)).toFixed(2) + 's');
+    var fanBed = s.fanBed * home;
+    st.setProperty('--fan-bed-play',
+      fanBed > 0.22 && !REDUCED ? 'running' : 'paused');
+    st.setProperty('--fan-bed-dur',
+      (7.4 - 5.2 * clamp(fanBed, 0, 1)).toFixed(2) + 's');
+    /* the cutaway's own state: air, hot water, an occupied bed, and the
+       daylight the curtains are letting in at this hour */
+    st.setProperty('--ac', s.ac.toFixed(3));
+    st.setProperty('--steam', s.steam.toFixed(3));
+    st.setProperty('--bed-o', s.bedO.toFixed(3));
+    st.setProperty('--sunp', (s.cu * day * 0.92).toFixed(3));
+    st.setProperty('--fu-x', s.fuX.toFixed(1) + 'px');
+    st.setProperty('--fu-y', s.fuY.toFixed(1) + 'px');
+    st.setProperty('--fu-o', s.fuO.toFixed(3));
+    st.setProperty('--fg-x', s.fgX.toFixed(1) + 'px');
+    st.setProperty('--fg-y', s.fgY.toFixed(1) + 'px');
+    st.setProperty('--fg-o', s.fgO.toFixed(3));
+  }
+
+  /* ---------------------------------------------------------------- hero */
+  /* The residence is no longer painted here -- the hero is the film. The
+     drawing stays in the document because "An ordinary day" clones it, and
+     that section is left exactly as it was. */
+  var heroSvg = document.querySelector('#residence-src .residence');
+
+  /* THE FOCUS SHIFT
+     The hero holds focus while it is the subject and loses it as the next
+     section takes over: blur, a little dimmer, a little further back. It is
+     tied to scroll position rather than switched on at a threshold, so it
+     reads as a lens pulling focus instead of a filter being applied.
+     Only #hero carries it. The navigation is a sibling, the gradient canvas
+     is fixed behind everything, and every section below is untouched. */
+  var heroWrap = document.getElementById('hero-wrap');
+  var heroEl = document.getElementById('hero');
+  var heroVideo = document.getElementById('hero-video');
+
+  if (heroWrap && heroEl && !REDUCED) {
+    ScrollTrigger.create({
+      trigger: heroWrap,
+      start: 'top top',
+      end: 'bottom top',
+      onUpdate: function (self) {
+        var p = self.progress;
+        var on = p > 0.002;
+        heroEl.classList.toggle('receding', on);
+        if (!on) return;
+        /* eased so the hero stays genuinely sharp through the first part of
+           the scroll and gives up focus as it actually leaves */
+        var e = p * p * (3 - 2 * p);
+        heroEl.style.setProperty('--hero-blur', (13 * e).toFixed(2) + 'px');
+        heroEl.style.setProperty('--hero-dim', (1 - 0.30 * e).toFixed(3));
+        heroEl.style.setProperty('--hero-op', (1 - 0.42 * e).toFixed(3));
+      }
+    });
+  }
+
+  if (heroVideo) {
+    if (REDUCED) {
+      /* one still frame for anyone who asked not to see motion */
+      heroVideo.removeAttribute('autoplay');
+      heroVideo.autoplay = false;
+      heroVideo.pause();
+    } else {
+      /* autoplay is declared in the markup so it works without this script;
+         this only recovers from a browser that declined the first attempt */
+      var wake = heroVideo.play();
+      if (wake && wake.catch) wake.catch(function () {});
+      /* nothing is gained by decoding frames nobody can see. This is an
+         observer rather than a scroll trigger because it has to be right
+         about visibility on the way back up as well, and it does not depend
+         on any pinned section's measurements being fresh. */
+      if (window.IntersectionObserver) {
+        new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            var r = heroVideo.play();
+            if (r && r.catch) r.catch(function () {});
+          } else {
+            heroVideo.pause();
+          }
+        }, { threshold: 0 }).observe(heroVideo);
+      }
+    }
+  }
+
+  /* =====================================================================
+     AN ORDINARY DAY — vertical scroll drives horizontal travel, and the
+     light travels with it. The same residence throughout.  (68, 70, 71)
+     ===================================================================== */
+  var rTrack = document.getElementById('rhythm-track');
+  var rCol = document.getElementById('rhythm-col');
+  var rScene = document.getElementById('rhythm-scene');
+  var rSky = rScene.querySelector('.sky');
+  var panes = gsap.utils.toArray('.phasepane');
+  /* Where on the day's clock each pane looks. These are not arbitrary
+     positions on a slider -- each one is the point in STOPS that actually
+     carries the hour printed in that pane's copy, which is the whole reason
+     the light is believable: "the warmest hour" lands on 19:20 and gets the
+     golden sky, and "Night 22:30" lands on the dark one instead of stopping
+     part-way through dusk. Move a stop's clock and these move with it. */
+  var PHASE = [
+    0.00,   /* Dawn      05:40 */
+    0.17,   /* Morning   07:10 */
+    0.55,   /* Departure 14:30 -- midday sun, short shadows */
+    0.71,   /* Arrival   18:10 -- late afternoon, the house pre-cooling */
+    0.83,   /* Dusk      19:20 -- the warmest hour */
+    0.93    /* Night     22:30 */
+  ];
+  var NAMES = ['Dawn', 'Morning', 'Departure', 'Arrival', 'Dusk', 'Night'];
+  var nOut = document.getElementById('phase-n');
+  var nameOut = document.getElementById('phase-name');
+  var pdots = document.querySelectorAll('.pdot');
+
+  if (!REDUCED) {
+    var rSvg = heroSvg.cloneNode(true);
+    var cdefs = rSvg.querySelector('defs');
+    if (cdefs) cdefs.parentNode.removeChild(cdefs);
+    /* the source is inert now, so the clone already carries the whole
+       building; only the interior/exterior flag needs stating */
+    rSvg.style.setProperty('--ext', '1');
+    /* One step back from the drawing. Nothing is scaled and no proportion
+       changes -- the frame simply opens up around the same building, which
+       is what gives the house its ground and its sky again. Derived from
+       the source's own frame so it cannot drift if the plan changes. */
+    (function () {
+      var b = rSvg.getAttribute('viewBox').split(/\s+/).map(Number);
+      var cx = b[0] + b[2] / 2, cy = b[1] + b[3] / 2;
+      var w = b[2] * 1.26, h = b[3] * 1.26;
+      rSvg.setAttribute('viewBox', (cx - w / 2).toFixed(1) + ' '
+        + (cy - h / 2).toFixed(1) + ' ' + w.toFixed(1) + ' ' + h.toFixed(1));
+    }());
+    rScene.appendChild(rSvg);
+    paintSky(0, rSky);
+    paintHouse(0, rSvg);
+
+    var lastPhase = -1, lastQ = -1;
+    gsap.to(rTrack, {
+      x: function () { return -(rTrack.scrollWidth - rTrack.clientWidth); },
+      ease: 'none',
+      onUpdate: function () {
+        /* read the travel that has actually been applied, so the light and
+           the words stay in step with the eased track */
+        var span = rTrack.scrollWidth - rTrack.clientWidth;
+        var prog = span > 0 ? clamp(-gsap.getProperty(rTrack, 'x') / span, 0, 1) : 0;
+        /* six phases, five pane-widths of travel */
+        var seg = clamp(prog, 0, 1) * (panes.length - 1);
+        var i = Math.min(Math.floor(seg), PHASE.length - 2);
+        var dayP = PHASE[i] + (PHASE[i + 1] - PHASE[i]) * smooth(clamp(seg - i, 0, 1));
+        var s = paintSky(dayP, rSky);
+        var q = Math.round(dayP * 420);
+        if (q !== lastQ) { lastQ = q; paintHouse(dayP, rSvg, s); }
+
+        /* a phase reads clearly only while it holds the centre (45) */
+        var cw = rTrack.clientWidth;
+        var mid = rCol.getBoundingClientRect().left + cw / 2;
+        for (var k = 0; k < panes.length; k++) {
+          var r = panes[k].getBoundingClientRect();
+          var d = Math.abs(r.left + r.width / 2 - mid) / cw;
+          panes[k].style.opacity = Math.max(0, 1 - d * 1.3).toFixed(3);
+        }
+        /* the residence drifts slower than the words (46, 70) */
+        rScene.style.transform =
+          'translateX(' + (-prog * (window.innerWidth < 1024 ? 34 : 92)).toFixed(1) + 'px)';
+
+        var near = Math.round(seg);
+        if (near !== lastPhase) {
+          lastPhase = near;
+          nOut.textContent = '0' + (near + 1);
+          nameOut.textContent = NAMES[near];
+          for (var dd = 0; dd < pdots.length; dd++) {
+            pdots[dd].style.background = dd <= near
+              ? 'rgba(240,236,228,.5)' : 'rgba(240,236,228,.13)';
+          }
+        }
+      },
+      scrollTrigger: {
+        trigger: '#day', start: 'top top', end: '+=340%',
+        pin: '#rhythm', anticipatePin: 1, scrub: 1, invalidateOnRefresh: true
+      }
+    });
+  } else {
+    paintSky(0.83, rSky);
+  }
+
+  /* =====================================================================
+     MADE FOR INDIAN HOMES — the cards physically travel; whichever one
+     reaches the centre becomes the live card.  (73)
+     ===================================================================== */
+  var railTrack = document.getElementById('rail-track');
+  var cards = gsap.utils.toArray('.fcard');
+
+  if (!REDUCED) {
+    gsap.to(railTrack, {
+      x: function () { return -(railTrack.scrollWidth - window.innerWidth); },
+      ease: 'none',
+      onUpdate: function () {
+        var mid = window.innerWidth / 2, best = 0, bd = 1e9;
+        for (var i = 0; i < cards.length; i++) {
+          var r = cards[i].getBoundingClientRect();
+          var d = Math.abs(r.left + r.width / 2 - mid);
+          if (d < bd) { bd = d; best = i; }
+        }
+        for (var j = 0; j < cards.length; j++) {
+          cards[j].classList.toggle('live', j === best);
+        }
+      },
+      scrollTrigger: {
+        trigger: '#india', start: 'top top', end: '+=260%',
+        pin: '#rail', anticipatePin: 1, scrub: 1, invalidateOnRefresh: true
+      }
+    });
+  }
+
+  /* =====================================================================
+     REVEALS — what is physically happening, not a blanket fade-up  (45)
+     ===================================================================== */
+  if (!REDUCED) {
+    gsap.utils.toArray('.h1, .h2, .h3').forEach(function (head) {
+      var lines = head.querySelectorAll('.rise > *');
+      if (!lines.length) return;
+      gsap.to(lines, {
+        y: '0%', duration: 1.15, ease: 'power3.out', stagger: 0.085,
+        scrollTrigger: { trigger: head, start: 'top 88%' }
+      });
+    });
+    gsap.utils.toArray('.settle').forEach(function (el) {
+      gsap.to(el, {
+        opacity: 1, duration: 1.1, ease: 'power2.out', delay: 0.12,
+        scrollTrigger: { trigger: el, start: 'top 92%' }
+      });
+    });
+    gsap.utils.toArray('.rule').forEach(function (el) {
+      gsap.to(el, {
+        scaleX: 1, duration: 1.3, ease: 'power3.inOut',
+        scrollTrigger: { trigger: el, start: 'top 94%' }
+      });
+    });
+  }
+
+  /* =====================================================================
+     CONTROL — the choices resolve one at a time, then the CTA becomes
+     available. Exactly four of five.  (81, 82, 83)
+     ===================================================================== */
+  var rows = gsap.utils.toArray('#rows .rowitem');
+  var ticks = rows.map(function (r) { return r.querySelector('.tick'); });
+  var counter = document.getElementById('counter');
+  var approve = document.getElementById('approve');
+  var note = document.getElementById('approved-note');
+  var MAXSEL = 4;
+  var touched = false, locked = false;
+
+  function count() {
+    return ticks.filter(function (t) { return t.checked; }).length;
+  }
+  function sync() {
+    var n = count();
+    counter.textContent = n + ' / ' + MAXSEL + ' selected';
+    rows.forEach(function (row, i) {
+      var t = ticks[i];
+      var full = !t.checked && n >= MAXSEL;
+      t.disabled = locked || full;
+      row.classList.toggle('sel', t.checked);
+      row.classList.toggle('off', locked ? !t.checked : full);
+    });
+    approve.disabled = locked || n === 0;
+    approve.style.opacity = (locked || n > 0) ? '1' : '.45';
+  }
+  ticks.forEach(function (t) {
+    t.addEventListener('change', function () { touched = true; sync(); });
+  });
+  sync();
+
+  var consent = document.getElementById('consent');
+  if (!REDUCED) {
+    var tl = gsap.timeline({ scrollTrigger: { trigger: consent, start: 'top 76%' } });
+    tl.to(consent, { opacity: 1, y: 0, scale: 1, duration: 1.25, ease: 'power3.out' });
+    for (var ci = 0; ci < MAXSEL; ci++) {
+      (function (idx) {
+        tl.add(function () {
+          if (touched || locked) return;
+          ticks[idx].checked = true;
+          sync();
+        }, '>-0.5');
+      })(ci);
+    }
+  } else {
+    for (var k2 = 0; k2 < MAXSEL; k2++) ticks[k2].checked = true;
+    sync();
+  }
+
+  approve.addEventListener('click', function () {
+    if (locked || count() === 0) return;
+    locked = true;
+    approve.textContent = 'Routine active';
+    approve.style.borderColor = 'rgba(245,183,90,.32)';
+    approve.style.color = 'var(--c-gold)';
+    approve.style.background = 'rgba(245,183,90,.07)';
+    sync();
+    note.style.opacity = '1';
+  });
+
+  /* =====================================================================
+  /* ============================================================ chrome */
+  /* The nav travels with the gesture: scrolling down walks it up by at most
+     its own height, scrolling up walks it back down, and it can never go
+     below where it rests. The target is accumulated from scroll deltas, so
+     it is proportional to the scroll rather than a snap to either end, and
+     the drawn value eases toward it on its own short-lived frame loop --
+     one that stops as soon as it settles, so a still page costs nothing.
+     This extends the existing handler; the chrome still has exactly one
+     scroll listener. */
+  var nav = document.getElementById('nav');
+  var navTravel = nav.offsetHeight + 14;   /* the pill plus its top inset */
+  var navTarget = 0, navAt = 0, navRAF = 0;
+  var navLastY = window.scrollY;
+
+  function navPaint() {
+    nav.style.transform = 'translate3d(0,' + navAt.toFixed(2) + 'px,0)';
+  }
+  function navStep() {
+    navAt += (navTarget - navAt) * 0.16;
+    if (Math.abs(navTarget - navAt) < 0.15) { navAt = navTarget; navRAF = 0; }
+    else { navRAF = requestAnimationFrame(navStep); }
+    navPaint();
+  }
+
+  var onScroll = function () {
+    var y = window.scrollY, dy = y - navLastY;
+    navLastY = y;
+    nav.classList.toggle('on', y > 40);
+    if (y <= 8) { navTarget = 0; }                    /* parked at the top */
+    else if (dy > 1 || dy < -1) {                     /* ignore jitter */
+      navTarget = clamp(navTarget - dy, -navTravel, 0);
+    }
+    if (navTarget === navAt) return;
+    if (REDUCED) { navAt = navTarget; navPaint(); }
+    else if (!navRAF) { navRAF = requestAnimationFrame(navStep); }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', function () {
+    navTravel = nav.offsetHeight + 14;
+    navTarget = clamp(navTarget, -navTravel, 0);
+  });
+  onScroll();
+
+  var menu = document.getElementById('menu');
+  var burger = document.getElementById('burger');
+  function setMenu(open) {
+    menu.classList.toggle('on', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+  burger.addEventListener('click', function () { setMenu(true); });
+  document.getElementById('menu-close').addEventListener('click', function () { setMenu(false); });
+  gsap.utils.toArray('.menu-link').forEach(function (a) {
+    a.addEventListener('click', function () { setMenu(false); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setMenu(false);
+  });
+
+  document.getElementById('totop').addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  window.addEventListener('load', function () { ScrollTrigger.refresh(); });
+});
+</script>
+
+<!-- ============================================================
+     THE BACKGROUND
+     One WebGL canvas behind the whole site: a domain-warped noise field
+     painted through the brand palette, written for this project. It is not
+     a gradient library and carries no third-party attribution -- the maths
+     is the standard value-noise / fbm / domain-warp construction, and every
+     constant below was tuned by measuring the result against the look we
+     wanted (mean luminance, saturation, warm coverage and the size of the
+     light streaks) rather than by eye alone.
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+  var canvas = document.getElementById('gradient');
+  /* guard: exactly one instance, even if this were ever evaluated twice */
+  if (!canvas || window.__switchlessGradient) return;
+
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* The palette, in the order the ramp expects: two near-blacks, the ivory,
+     and the three warm browns. Nothing else is introduced. */
+  var LOOK = {
+    colors: ['#0A0A0C', '#F0ECE4', '#18181C', '#322318', '#2E1312', '#3A2209'],
+    frequency: [1.0, 1.25],   /* how many masses across / down */
+    pressure:  [0.9, 0.75],   /* how hard the field is pushed each way */
+    flowScale: 2.0,           /* how far the warp drags the field */
+    warpA: 2.6, warpB: 1.1,
+    blend: 0.13,              /* softness of the colour transitions */
+    shadow: 0.72,             /* how deep the darks fall */
+    brightness: 1.35,
+    saturation: 1.45,
+    contrast: 2.0,            /* how far the field reaches its extremes */
+    rampBias: 0.26,           /* slides the palette along the field */
+    /* Where the ivory would reach full strength. Holding it past the end of
+       the field means the ivory can only ever arrive as a partial wash, so
+       the brightest pixel the background can produce is 0.11 relative
+       luminance -- #F0ECE4 body text stays at 5.5:1 over every frame of the
+       animation, at every scroll position. Bring this toward 1.0 and the
+       streaks turn to hard white and take the text below 4.5:1. */
+    ivoryEnd: 1.30,
+    grain: 0.075, grainScale: 2.0, grainSpeed: 0.1,
+    resolution: 0.7,          /* render below native and let the GPU upscale */
+    maxDpr: 1.5
+  };
+  var SPEED = 0.15;           /* seconds of field time per second of clock */
+  var SCROLL_DRIFT = 0.0004;  /* field units per pixel scrolled */
+
+  var VERT =
+    'attribute vec2 aPos;' +
+    'varying vec2 vUv;' +
+    'void main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }';
+
+  var FRAG = [
+    'precision mediump float;',
+    'varying vec2 vUv;',
+    'uniform vec2  uRes;',
+    'uniform float uTime;',
+    'uniform float uScroll;',
+    'uniform vec3  uC0, uC1, uC2, uC3, uC4, uC5;',
+    'uniform vec2  uFreq;',        /* how many masses across / down       */
+    'uniform vec2  uPressure;',    /* how hard the field is pushed each way */
+    'uniform float uFlowScale;',   /* how far the warp displaces the field  */
+    'uniform float uWarpA, uWarpB;',
+    'uniform float uBlend;',       /* softness of the colour transitions    */
+    'uniform float uShadow;',      /* how deep the darks go                 */
+    'uniform float uBright;',
+    'uniform float uSat;',
+    'uniform float uGrain, uGrainScale, uGrainSpeed;',
+    'uniform float uContrast;',    /* how hard the field reaches its extremes */
+    'uniform float uRampBias;',    /* slides the whole palette along the field */
+    'uniform float uIvoryEnd;',    /* where the ivory would reach full strength */
+
+    /* ---- value noise: a hashed lattice, smoothly interpolated ---------- */
+    'vec2 hash2(vec2 p){',
+    '  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));',
+    '  return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);',
+    '}',
+    'float gnoise(vec2 p){',
+    '  vec2 i = floor(p), f = fract(p);',
+    '  vec2 u = f * f * (3.0 - 2.0 * f);',
+    '  return mix(mix(dot(hash2(i + vec2(0.0,0.0)), f - vec2(0.0,0.0)),',
+    '                 dot(hash2(i + vec2(1.0,0.0)), f - vec2(1.0,0.0)), u.x),',
+    '             mix(dot(hash2(i + vec2(0.0,1.0)), f - vec2(0.0,1.0)),',
+    '                 dot(hash2(i + vec2(1.0,1.0)), f - vec2(1.0,1.0)), u.x), u.y);',
+    '}',
+    /* four octaves is enough for masses this soft; more only costs fill rate */
+    'float fbm(vec2 p){',
+    '  float a = 0.5, s = 0.0;',
+    '  for (int i = 0; i < 4; i++){ s += a * gnoise(p); p *= 2.03; a *= 0.5; }',
+    '  return s;',
+    '}',
+
+    /* ---- the palette, as a ramp along the field -----------------------
+       The stops are deliberately uneven. The ivory sits in a narrow band at
+       the very top so it can only ever appear as thin filaments -- a wide
+       band would put a bright cloud behind the copy and take the text below
+       its contrast floor. */
+    'vec3 ramp(float t){',
+    '  float w = uBlend;',
+    '  vec3 c = uC0;',
+    '  c = mix(c, uC2, smoothstep(0.30 - w, 0.56 + w, t));',
+    '  c = mix(c, uC4, smoothstep(0.54 - w, 0.72 + w, t));',
+    '  c = mix(c, uC3, smoothstep(0.68 - w, 0.83 + w, t));',
+    '  c = mix(c, uC5, smoothstep(0.80 - w, 0.92 + w, t));',
+    '  c = mix(c, uC1, smoothstep(0.86, uIvoryEnd, t));',
+    '  return c;',
+    '}',
+
+    'void main(){',
+    '  vec2 uv = vUv;',
+    '  uv.x *= uRes.x / uRes.y;',                  /* keep the masses round */
+    '  float t = uTime;',
+    '  vec2 p = vec2(uv.x * uFreq.x, uv.y * uFreq.y + uScroll);',
+
+    /* two rounds of domain warping: the field is displaced by a field, which
+       is itself displaced by another. This is what turns noise into something
+       that reads as flowing rather than as clouds. */
+    '  vec2 q = vec2(fbm(p * uPressure.x + vec2(0.0, t * 0.11)),',
+    '                fbm(p * uPressure.y + vec2(5.2, 1.3) + vec2(t * 0.09, 0.0)));',
+    '  vec2 r = vec2(fbm(p + uWarpA * q + vec2(1.7, 9.2) + t * 0.07),',
+    '                fbm(p + uWarpB * q + vec2(8.3, 2.8) - t * 0.06));',
+    '  float f = fbm(p + uFlowScale * r);',
+    '  float g = fbm(p * 0.6 + r * 1.4 + 13.7);',   /* the shading field */
+
+    '  float tt = clamp(f * uContrast + 0.5 + uRampBias, 0.0, 1.0);',
+    '  vec3 col = ramp(tt);',
+
+    /* the darks are pushed down rather than the lights pulled up, which is
+       what keeps the whole thing cinematic instead of merely dim */
+    '  col *= 1.0 - uShadow * pow(clamp((0.5 - g) * 1.9, 0.0, 1.0), 1.4);',
+    '  float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));',
+    '  col = mix(vec3(luma), col, uSat);',
+    '  col *= uBright;',
+
+    /* film grain: a per-pixel hash that crawls slowly, so the flat darks are
+       never a flat block of one value */
+    '  vec2 gp = gl_FragCoord.xy / uGrainScale;',
+    '  float gr = fract(sin(dot(gp + floor(t * uGrainSpeed * 24.0),',
+    '                          vec2(12.9898, 78.233))) * 43758.5453);',
+    '  col += (gr - 0.5) * uGrain;',
+
+    '  gl_FragColor = vec4(max(col, 0.0), 1.0);',
+    '}'
+  ].join('\n');
+
+  function hex(h) {
+    var n = parseInt(h.slice(1), 16);
+    return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+  }
+
+  function compile(gl, type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(s));
+    }
+    return s;
+  }
+
+  function create(canvas, opt) {
+    opt = opt || {};
+    var gl = canvas.getContext('webgl', {
+      alpha: false, antialias: false, depth: false, stencil: false,
+      powerPreference: 'low-power', preserveDrawingBuffer: !!opt.preserveDrawingBuffer
+    });
+    if (!gl) return null;
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      throw new Error(gl.getProgramInfoLog(prog));
+    }
+    gl.useProgram(prog);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'aPos');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    var U = {};
+    ['uRes', 'uTime', 'uScroll', 'uC0', 'uC1', 'uC2', 'uC3', 'uC4', 'uC5',
+     'uFreq', 'uPressure', 'uFlowScale', 'uWarpA', 'uWarpB', 'uBlend',
+     'uShadow', 'uBright', 'uSat', 'uGrain', 'uGrainScale', 'uGrainSpeed',
+     'uContrast', 'uRampBias', 'uIvoryEnd'
+    ].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+
+    var c = opt.colors;
+    gl.uniform3fv(U.uC0, hex(c[0])); gl.uniform3fv(U.uC1, hex(c[1]));
+    gl.uniform3fv(U.uC2, hex(c[2])); gl.uniform3fv(U.uC3, hex(c[3]));
+    gl.uniform3fv(U.uC4, hex(c[4])); gl.uniform3fv(U.uC5, hex(c[5]));
+    gl.uniform2f(U.uFreq, opt.frequency[0], opt.frequency[1]);
+    gl.uniform2f(U.uPressure, opt.pressure[0], opt.pressure[1]);
+    gl.uniform1f(U.uFlowScale, opt.flowScale);
+    gl.uniform1f(U.uWarpA, opt.warpA);
+    gl.uniform1f(U.uWarpB, opt.warpB);
+    gl.uniform1f(U.uBlend, opt.blend);
+    gl.uniform1f(U.uShadow, opt.shadow);
+    gl.uniform1f(U.uBright, opt.brightness);
+    gl.uniform1f(U.uSat, opt.saturation);
+    gl.uniform1f(U.uGrain, opt.grain);
+    gl.uniform1f(U.uGrainScale, opt.grainScale);
+    gl.uniform1f(U.uGrainSpeed, opt.grainSpeed);
+    gl.uniform1f(U.uContrast, opt.contrast);
+    gl.uniform1f(U.uRampBias, opt.rampBias);
+    gl.uniform1f(U.uIvoryEnd, opt.ivoryEnd);
+
+    var dpr = 1, w = 0, h = 0;
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, opt.maxDpr);
+      var cw = canvas.clientWidth || canvas.width;
+      var ch = canvas.clientHeight || canvas.height;
+      var nw = Math.max(1, Math.round(cw * dpr * opt.resolution));
+      var nh = Math.max(1, Math.round(ch * dpr * opt.resolution));
+      if (nw === w && nh === h) return;
+      w = nw; h = nh;
+      canvas.width = w; canvas.height = h;
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(U.uRes, w, h);
+    }
+    resize();
+
+    var api = {
+      time: 0,
+      scroll: 0,
+      /* live-tunable knobs, so the look can be adjusted without tearing the
+         context down and rebuilding it */
+      set: function (o) {
+        if ('blend' in o) gl.uniform1f(U.uBlend, o.blend);
+        if ('shadow' in o) gl.uniform1f(U.uShadow, o.shadow);
+        if ('brightness' in o) gl.uniform1f(U.uBright, o.brightness);
+        if ('saturation' in o) gl.uniform1f(U.uSat, o.saturation);
+        if ('contrast' in o) gl.uniform1f(U.uContrast, o.contrast);
+        if ('rampBias' in o) gl.uniform1f(U.uRampBias, o.rampBias);
+        if ('ivoryEnd' in o) gl.uniform1f(U.uIvoryEnd, o.ivoryEnd);
+        if ('grain' in o) gl.uniform1f(U.uGrain, o.grain);
+        if ('flowScale' in o) gl.uniform1f(U.uFlowScale, o.flowScale);
+        if ('warpA' in o) gl.uniform1f(U.uWarpA, o.warpA);
+        if ('warpB' in o) gl.uniform1f(U.uWarpB, o.warpB);
+        if ('frequency' in o) gl.uniform2f(U.uFreq, o.frequency[0], o.frequency[1]);
+        if ('pressure' in o) gl.uniform2f(U.uPressure, o.pressure[0], o.pressure[1]);
+      },
+      draw: function () {
+        gl.uniform1f(U.uTime, api.time);
+        gl.uniform1f(U.uScroll, api.scroll);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      },
+      resize: resize,
+      destroy: function () {
+        gl.deleteBuffer(buf);
+        gl.deleteProgram(prog);
+        var lose = gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+      }
+    };
+    return api;
+  }
+
+  var bg = null;
+  try {
+    bg = create(canvas, LOOK);
+  } catch (e) {
+    /* a shader that will not compile should say so rather than leave the page
+       silently flat; the CSS ground colour is still there underneath */
+    if (window.console) console.warn('background unavailable:', e && e.message);
+  }
+  if (!bg) return;
+  window.__switchlessGradient = bg;
+
+  /* Scroll moves the composition through the field; it never restarts it, so
+     the background reads as one continuous surface the page slides over
+     rather than a new gradient per section. Coalesced into the frame loop,
+     so scrolling costs nothing beyond a property write. */
+  var scrollY = window.scrollY || 0;
+  function onScroll() { scrollY = window.scrollY || 0; }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', function () { bg.resize(); }, { passive: true });
+
+  var raf = 0, t0 = 0, running = false;
+
+  function frame(now) {
+    if (!t0) t0 = now;
+    bg.time = (now - t0) / 1000 * SPEED;
+    bg.scroll = scrollY * SCROLL_DRIFT;
+    bg.resize();
+    bg.draw();
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    if (running || REDUCED) return;
+    running = true;
+    t0 = 0;
+    raf = requestAnimationFrame(frame);
+  }
+  function stop() {
+    running = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  }
+
+  if (REDUCED) {
+    /* one still frame for anyone who asked not to see motion */
+    bg.time = 4.0;
+    bg.scroll = 0;
+    bg.draw();
+  } else {
+    start();
+    /* nothing is gained by painting frames into a tab nobody is looking at */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { stop(); } else { start(); }
+    });
+  }
+
+  window.addEventListener('pagehide', function () {
+    stop();
+    window.removeEventListener('scroll', onScroll);
+    bg.destroy();
+    window.__switchlessGradient = null;
+  }, { once: true });
+}());
+</script>
+</body>
+</html>
